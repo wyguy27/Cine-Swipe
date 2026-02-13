@@ -5,3 +5,7 @@ venv
 # API Key
 .env
 env
+
+# pycache directory
+__pycache__/
+*.pyc
