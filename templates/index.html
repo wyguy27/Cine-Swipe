@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html>
-
-
     <div class="container">
         <div class="navbar">
             <nav> <a href="index.html">
-                <img class="icon" src="/src/icons/home.png"/>
+                <img class="icon" src="icons/home.png"/>
             </a> <a href="about.html">About</a></nav>
         <head>
         </div>
@@ -13,15 +11,45 @@
             <title>Cine-Swipe</title>
         </head>
         <body>
-            <div class="image-container">
-                <img src="/src/img/movieposter.jpg" class="image"/>
-                <div class="button-container">
-                    <button class="button-like">YES</button>
-                    <button class="button-dislike">NO</button>
-                </div>
+            <div class="image-container" id="imageContainer">
+                <img src="img/movieposter.jpg" class="image" id="image"/>
+            </div>
+            <div class="button-container">
+                <button class="button-dislike" onclick="getMovie(this)">NO</button>
+                <button  class="button-like" onclick="getMovie(this)">YES</button>
+                
             </div>
         </body>
     </div>
- 
     
 </html>
+
+<script>
+function getMovie(button){
+    //const sensitivity = 50;
+    if(true){
+        const card = document.getElementById("image");
+
+        card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
+        card.style.transform = `translateX(${button.textContent == "YES" ? 1000 : -1000}px)
+ rotate(${button.textContent == "NO" ? -45 : 45}deg)`
+;
+        card.style.opacity = 0;
+    }
+    const movie = fetch("/api/get-next-movie");
+
+    if(!("error" in movie)){
+        console.log("hello");
+        const newCard = document.createElement("div");
+
+        newCard.className = "image";
+        newCard.src = movie["poster_path"];
+        document.getElementById("imageContainer").appendChild(newCard);
+        console.log(movie["poster_path"]);
+        console.log(movie);
+
+    }
+    console.log("Request Movie");
+}
+
+</script>
