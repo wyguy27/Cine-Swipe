@@ -1,5 +1,7 @@
 # Python virtual environment
 .venv
+venv
 
 # API Key
 .env
+env
