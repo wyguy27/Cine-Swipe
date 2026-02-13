@@ -4,8 +4,12 @@ html, body{
 }
 
 .image {
-    max-width: 400px;
-    max-height: 1000px;
+    position: absolute;
+    width: 100%;
+    height: 600px;
+    border-radius: 10px;
+    transition: transform -.3s ease, opcity 0.3s ease;
+    will-change: transform;
     box-shadow: 0 10px 30px black,
     inset 0 0 0 1px black;
 }
@@ -21,10 +25,13 @@ html, body{
 }
 
 .image-container {
+    position : relative;
+    width: 400px;
+    height: 600px;
     display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    padding: 20px;
+    justify-content: center;
+    align-items: center;
+
 }
 
 button {
@@ -34,7 +41,7 @@ button {
     text-align: center;
     text-decoration: none;
     font-size: 16px;
-    margin: 40px 2px;
+    margin: 20px 2px;
     cursor: pointer;    
 }
 
