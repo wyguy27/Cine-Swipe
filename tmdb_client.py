@@ -15,6 +15,7 @@ headers = {
     "Authorization": "Bearer " + api_key 
     }
 
+# Gets a list of some random movies right now
 response = requests.get(url, headers=headers)
 
 print(response.text)
