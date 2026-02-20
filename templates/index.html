@@ -25,7 +25,10 @@
 </html>
 
 <script>
+
+    var pastMovie = "";
 async function getMovie(button){
+    console.log(pastMovie);
     const card = document.getElementById("image");
     if (card) {
         card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
@@ -54,6 +57,7 @@ async function getMovie(button){
         newCard.className = "image";
         newCard.id = "image";
         newCard.src = movie["poster_path"];
+        pastMovie = movie;
         container.appendChild(newCard);
     }
 }
