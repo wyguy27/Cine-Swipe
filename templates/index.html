@@ -31,6 +31,12 @@ async function getMovie(button){
         card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
         card.style.transform = `translateX(${button.textContent == "YES" ? 1000 : -1000}px) rotate(${button.textContent == "NO" ? -45 : 45}deg)`;
         card.style.opacity = 0;
+    
+
+        setTimeout(() => {
+            card.remove();
+        }, 400);
+
     }
 
     const [_, response] = await Promise.all([
@@ -46,6 +52,7 @@ async function getMovie(button){
         const newCard = document.createElement("img");
         newCard.id = "image";
         newCard.className = "image";
+        newCard.id = "image";
         newCard.src = movie["poster_path"];
         container.appendChild(newCard);
     }
