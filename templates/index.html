@@ -25,7 +25,7 @@
 </html>
 
 <script>
-function getMovie(button){
+async function getMovie(button){
     //const sensitivity = 50;
     if(true){
         const card = document.getElementById("image");
@@ -36,15 +36,17 @@ function getMovie(button){
 ;
         card.style.opacity = 0;
     }
-    const movie = fetch("/api/get-next-movie");
+    const response = await fetch("/api/get-next-movie");
+    const movie = await response.json();
 
     if(!("error" in movie)){
         console.log("hello");
-        const newCard = document.createElement("div");
+        const newCard = document.createElement("img");
 
         newCard.className = "image";
         newCard.src = movie["poster_path"];
         document.getElementById("imageContainer").appendChild(newCard);
+        console.log("newCard");
         console.log(movie["poster_path"]);
         console.log(movie);
 
