@@ -9,3 +9,6 @@ env
 # pycache directory
 __pycache__/
 *.pyc
+
+# .vscode directory
+.vscode/
