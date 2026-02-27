@@ -6,6 +6,7 @@ app = Flask(__name__)
 # This is our queue of movies to display the users
 MOVIE_QUEUE = []
 LIKED_MOVIE = []
+DISLIKED_MOVIE = []
 
 # Home route that renders the main page of the app
 @app.route('/')
@@ -41,8 +42,11 @@ def handle_vote():
     if vote_type == 'like':
         # Add to liked movies list
         LIKED_MOVIE.append(movie_id)
+    elif vote_type == 'dislike':
+        # Add to disliked movies list
+        DISLIKED_MOVIE.append(movie_id)
 
-    return jsonify({"message": "Vote received", "liked_movies": LIKED_MOVIE})
+    return jsonify({"message": "Vote received", "liked_movies": LIKED_MOVIE, "disliked_movies": DISLIKED_MOVIE})
 
 
     
