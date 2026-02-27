@@ -18,7 +18,7 @@ def home():
 # Gets the list of movie genres from API and sends it to the frontend in JSON format
 @app.route('/api/genres')
 def get_genres():
-    genres = fetch_genres() # Assuming this function also fetches genres
+    genres = fetch_genres()
     return jsonify(genres)
 
 # Sends the next movie in the queue to the frontend in JSON format
