@@ -5,6 +5,7 @@ app = Flask(__name__)
 
 # This is our queue of movies to display the users
 MOVIE_QUEUE = []
+LIKED_MOVIE = []
 
 @app.route('/')
 def home():
@@ -12,6 +13,8 @@ def home():
 
 @app.route('/api/get-next-movie')
 def get_next_movie():
+
+    # queue of next movies to show
     global MOVIE_QUEUE
     
     # If the list is empty, refill it from the API
@@ -25,6 +28,16 @@ def get_next_movie():
         return jsonify(single_movie)
     
     return jsonify({"error": "No movies available"}), 404
+
+# @app.route('/api/like-movie/<int:movie_id>', methods=['POST'])
+# def like_movie(id):
+
+    # list of movies liked by the user
+    # global LIKED_MOVIES
+
+    # LIKED_MOVIES.appen
+
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
