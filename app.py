@@ -1,10 +1,12 @@
 from flask import Flask, render_template, jsonify, request
-from tmdb_client import fetch_movie_list
+from tmdb_client import fetch_movie_list, fetch_genres
 
 app = Flask(__name__)
 
-# This is our queue of movies to display the users
+# queue of movies to display the users
 MOVIE_QUEUE = []
+
+# lists to store the user's liked and disliked movies
 LIKED_MOVIE = []
 DISLIKED_MOVIE = []
 
@@ -12,6 +14,12 @@ DISLIKED_MOVIE = []
 @app.route('/')
 def home():
     return render_template('index.html') # CHANGE TO HOME PAGE ONCE SET UP
+
+# Gets the list of movie genres from API and sends it to the frontend in JSON format
+@app.route('/api/genres')
+def get_genres():
+    genres = fetch_genres() # Assuming this function also fetches genres
+    return jsonify(genres)
 
 # Sends the next movie in the queue to the frontend in JSON format
 @app.route('/api/get-next-movie')

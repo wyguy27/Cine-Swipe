@@ -27,3 +27,21 @@ def fetch_movie_list():
     except Exception as e:
         print(f"Error: {e}")
         return []
+    
+# fetches list of genres from api
+def fetch_genres():
+    genre_url = "https://api.themoviedb.org/3/genre/movie/list"
+    headers = {
+        "accept": "application/json",
+        "Authorization": "Bearer " + api_key
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        data = response.json()
+        genres = data.get('genres', [])
+        return genres
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
