@@ -12,11 +12,10 @@
         </head>
         <body>
             <div class="image-container" id="imageContainer">
-                <img src="../static/img/movieposter.jpg" class="image" id="image"/>
             </div>
             <div class="button-container">
-                <button class="button-dislike" onclick="getMovie(this)">NO</button>
-                <button  class="button-like" onclick="getMovie(this)">YES</button>
+                <button class="button-dislike" onclick="getMovie(this)" id="dislike">NO</button>
+                <button  class="button-like" onclick="getMovie(this)" id="like">YES</button>
                 
             </div>
         </body>
@@ -25,31 +24,60 @@
 </html>
 
 <script>
-function getMovie(button){
-    //const sensitivity = 50;
-    if(true){
+    var pastMovie = "";
+async function getMovie(button){
+    
+    
+    if (button != null) {
+        //console.log(typeof pastMovie);
         const card = document.getElementById("image");
+        const pastMovieJSON = JSON.parse(pastMovie);
+        pastMovieJSON["vote"] = button.id;        
+        const response = await fetch("api/vote", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(pastMovieJSON)
+        });
+        console.log("Sending" + JSON.stringify(pastMovieJSON));
+        //const data = await response.json();
+        //console.log(data.message);
 
         card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
-        card.style.transform = `translateX(${button.textContent == "YES" ? 1000 : -1000}px)
- rotate(${button.textContent == "NO" ? -45 : 45}deg)`
-;
+        card.style.transform = `translateX(${button.textContent == "YES" ? 1000 : -1000}px) rotate(${button.textContent == "NO" ? -45 : 45}deg)`;
         card.style.opacity = 0;
+    
+
+        setTimeout(() => {
+            card.remove();
+        }, 400);
+        
+
+
+
     }
-    const movie = fetch("/api/get-next-movie");
+
+    const [_, response] = await Promise.all([
+        new Promise(r => setTimeout(r, 400)),
+        fetch("/api/get-next-movie")
+    ]);
+    const movie = await response.json();
 
     if(!("error" in movie)){
-        console.log("hello");
-        const newCard = document.createElement("div");
+        const container = document.getElementById("imageContainer");
+        container.innerHTML = "";
 
+        const newCard = document.createElement("img");
+        newCard.id = "image";
         newCard.className = "image";
+        newCard.id = "image";
         newCard.src = movie["poster_path"];
-        document.getElementById("imageContainer").appendChild(newCard);
-        console.log(movie["poster_path"]);
-        console.log(movie);
-
+        pastMovie = JSON.stringify(movie, null, 2);
+        console.log("Storing Movie" + pastMovie);
+        container.appendChild(newCard);
     }
-    console.log("Request Movie");
 }
 
+window.onload = getMovie(null);
 </script>
