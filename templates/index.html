@@ -13,7 +13,19 @@
         <body>
             <div class="image-container" id="imageContainer">
                 <div class="image-inner" id="imageInner">
-                    
+                    <div class="image_face image_face--front" id="frontFace">
+                        <h2>Card Front</h2>
+                    </div>
+                    <div class="image_face image_face--back" id="backFace">
+                        <div class="image_content">
+                            <div class="card_header" id="backImage">
+                                <h2>Movie Info</h2>
+                            </div>
+                            <div class="image_body" id="textContainer">
+                                <h3>Movie Information</h3>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="button-container">
@@ -27,11 +39,18 @@
 </html>
 
 <script>
+    const card = document.querySelector(".image-inner");
+    card.addEventListener("click", function (e) {
+        card.classList.toggle('is-flipped');
+    });
+
     var pastMovie = "";
 async function getMovie(button){
     
     
     if (button != null) {
+        if (pastMovie === "") return;
+
         //console.log(typeof pastMovie);
         const card = document.getElementById("image");
         const pastMovieJSON = JSON.parse(pastMovie);
@@ -68,21 +87,25 @@ async function getMovie(button){
     const movie = await response.json();
 
     if(!("error" in movie)){
-        const container = document.getElementById("imageContainer");
-        container.innerHTML = "";
+        const frontCont = document.getElementById("frontFace");
+        frontCont.innerHTML = "";
+        const textContainer = document.getElementById("textContainer");
+        textContainer.innerHTML = "";
 
         //creates poster image
         const newCard = document.createElement("img");
         newCard.id = "image";
         newCard.className = "image";
-        newCard.id = "image";
         newCard.src = movie["poster_path"];
         pastMovie = JSON.stringify(movie, null, 2);
         console.log("Storing Movie" + pastMovie);
-        container.appendChild(newCard);
+        frontCont.appendChild(newCard);
+        
+        //creates text info
+        const textInfo = document.createElement("p");
+        textInfo.textContent = movie["overview"];
+        textContainer.appendChild(textInfo);
 
-        //create back of image
-        const newBackCard = document.createElement("")
     }
 }
 
