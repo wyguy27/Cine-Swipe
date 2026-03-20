@@ -5,6 +5,9 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("TMDB_API_KEY")
 
+# Base url that will be used for all types of movie searches
+search_url = "https://api.themoviedb.org/3/discover/movie"
+
 # fetches list of movies from api
 def fetch_movie_list():
     url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc"
