@@ -12,6 +12,9 @@
         </head>
         <body>
             <div class="image-container" id="imageContainer">
+                <div class="image-inner" id="imageInner">
+                    
+                </div>
             </div>
             <div class="button-container">
                 <button class="button-dislike" onclick="getMovie(this)" id="dislike">NO</button>
@@ -68,6 +71,7 @@ async function getMovie(button){
         const container = document.getElementById("imageContainer");
         container.innerHTML = "";
 
+        //creates poster image
         const newCard = document.createElement("img");
         newCard.id = "image";
         newCard.className = "image";
@@ -76,6 +80,9 @@ async function getMovie(button){
         pastMovie = JSON.stringify(movie, null, 2);
         console.log("Storing Movie" + pastMovie);
         container.appendChild(newCard);
+
+        //create back of image
+        const newBackCard = document.createElement("")
     }
 }
 

@@ -34,6 +34,21 @@ html, body{
 
 }
 
+.image-inner{
+    width: 100%;
+    height: 100%;
+    transition: transform 1s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+    position:relative;
+}
+
+.image-inner.is-flipped{
+    transform: rotateY(180deg);
+}
+
+.image
+
 button {
     border-radius: 5px;
     background-color: aliceblue;
