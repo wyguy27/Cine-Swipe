@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+    <div class="container">
+        <div class="navbar">
+            <nav> <a href="/">
+                <img class="icon" src="../static/icons/home.png"/>
+            </a> <a href="about.html">About</a></nav>
+        <head>
+        </div>
+            <link rel="stylesheet" href="../static/style.css">
+            <title>Cine-Swipe</title>
+        </head>
+
+        <form>
+            <input type="radio" id="isAdult" name="isAdult" value="yes">
+            <label for="isAdult">Adult?</label>
+            
+            <div id="genres"></div>
+
+            <input type="submit" value="Submit">
+        </form>
+
+        <button onclick="start()">Start</button>
+    </div>
+</html>
+
+<script>
+    window.onload = () =>{
+        populateGenres();
+    }
+
+    function start(){
+        window.location.href = "/start";
+    }
+
+    function select(id){
+        var opt = document.getElementById(id);
+        opt.select= !opt.select;
+    }
+
+    async function populateGenres(){
+        const genres = await fetch('/api/genres').then(response => response.json());
+        console.log(genres);
+        const genreList = document.getElementById('genres')
+        genres.forEach(genre => {
+            const input = document.createElement('input');
+            input.type = "checkbox";
+            input.id = genre.id;
+            input.value = genre.name;
+            
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.textContent = genre.name;
+
+            genreList.appendChild(input);
+            genreList.appendChild(label);
+        });
+    }
+</script>

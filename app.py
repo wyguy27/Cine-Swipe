@@ -13,7 +13,11 @@ DISLIKED_MOVIE = []
 # Home route that renders the main page of the app
 @app.route('/')
 def home():
-    return render_template('index.html') # CHANGE TO HOME PAGE ONCE SET UP
+    return render_template('homepage.html') # CHANGE TO HOME PAGE ONCE SET UP
+
+@app.route('/start')
+def start():
+    return render_template('index.html')
 
 # Gets the list of movie genres from API and sends it to the frontend in JSON format
 @app.route('/api/genres')
