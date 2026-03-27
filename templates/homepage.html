@@ -1,31 +1,66 @@
 <!DOCTYPE html>
-    <div class="container">
-        <div class="navbar">
+    <head>
+            <link rel="stylesheet" href="../static/style.css">
+            <title>Cine-Swipe</title>
+    </head>
+    <div class="navbar">
             <nav> <a href="/">
                 <img class="icon" src="../static/icons/home.png"/>
             </a> <a href="about.html">About</a></nav>
-        <head>
-        </div>
-            <link rel="stylesheet" href="../static/style.css">
-            <title>Cine-Swipe</title>
-        </head>
+    </div>
+    <div class="container">
+        
+       
 
-        <form>
-            <input type="radio" id="isAdult" name="isAdult" value="yes">
-            <label for="isAdult">Adult?</label>
+        <h1>Cine-Swipe</h1>
+        <h4>"A better way of chosing movies"</h4>
+
+        <div class="starting-container">
+            <button id="startButton" onclick="start()">Start</button>
+
+            <button id="more-options" onclick="showForm()">More Options</button>
+
             
-            <div id="genres"></div>
+        </div>
+        <form id="more-options-form">
+                <h1>More Options</h1>
+                <div id="isAdultContainer">
+                    <input type="radio" id="isAdult" name="isAdult" value="yes">
+                    <label for="isAdult">Adult?</label>
+                </div>
+                
 
-            <input type="submit" value="Submit">
-        </form>
+                <div id="genres">
+                    Genres:
+                </div>
 
-        <button onclick="start()">Start</button>
+                <div id="lang"></div>
+
+                <label for="start">Date Released from:</label>
+                <input type="date" id="start" name="startDate"
+                    value="2025-01-01"
+                    min="2025-01-01" max="2025-12-31">
+
+                <label for="end">To:</label>
+                <input type="date" id="end" name="endDate"
+                    value="2025-01-01"
+                    min="2025-01-01" max="2025-12-31">
+
+                <label for="rating">Rating (1.0 to 10.0):</label>
+                <input type="range" id="rating" name="rating" min="1.0" max="10.0" step="0.1">
+                <output id="ratingValue">5.0</output>
+
+
+                <input type="submit" value="Submit">
+            </form>
+        
     </div>
 </html>
 
 <script>
     window.onload = () =>{
         populateGenres();
+        // populateLang(); //still need function to populate languages
     }
 
     function start(){
@@ -56,4 +91,49 @@
             genreList.appendChild(label);
         });
     }
+
+    async function populateLang(){
+        const lang = await fetch('/api/languages').then(response => response.json());
+        console.log(lang);
+        const langList = document.getElementById('lang')
+        genres.forEach(genre => {
+            const input = document.createElement('input');
+            input.type = "checkbox";
+            input.id = lang.id;
+            input.value = lang.name;
+            
+
+            const label = document.createElement('label');
+            label.htmlFor = input.id;
+            label.textContent = lang.name;
+
+            const container = document.createElement('div');
+
+            container.appendChild(input);
+            container.appendChild(label);
+
+            langList.appendChild(container);
+        });
+    }
+
+    // Get the elements
+    const rangeInput = document.getElementById("rating");
+    const valueDisplay = document.getElementById("ratingValue");
+
+    // Add an event listener to update the display as the slider moves
+    rangeInput.addEventListener("input", function() {
+        valueDisplay.textContent = this.value;
+    });
+
+    function showForm(){
+        var form = document.getElementById('more-options-form');
+
+        if(form.style.display === "flex"){
+            form.style.display = "none";
+        }
+        else {
+            form.style.display = "flex";
+        }
+    }
+
 </script>
