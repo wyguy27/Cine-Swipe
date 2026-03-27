@@ -5,18 +5,24 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("TMDB_API_KEY")
 
-# Base url that will be used for all types of movie searches
-search_url = "https://api.themoviedb.org/3/discover/movie"
-
 # fetches list of movies from api
-def fetch_movie_list():
-    url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc"
+def fetch_movie_list(filters):
+    url = "https://api.themoviedb.org/3/discover/movie"
+
+    params = {
+        "include_adult": "true",
+        "language": "en-US",
+        "sort_by": "popularity.desc"
+    }
+
+    params.update(filters)
+
     headers = {
         "accept": "application/json",
         "Authorization": "Bearer " + api_key 
     }
     try:
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
         movies = data.get('results', [])
@@ -50,21 +56,19 @@ def fetch_genres():
         return []
     
 
-# fetch runtime of a movie by movie id
-def fetch_movie_runtime(movie_id):
-    url = f"https://api.themoviedb.org/3/movie/{movie_id}"
-
+# fetches list of languages from api
+def fetch_languages():
+    url = "https://api.themoviedb.org/3/configuration/languages"
     headers = {
         "accept": "application/json",
         "Authorization": "Bearer " + api_key
-    }   
+    }
 
-    try: 
+    try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        data = response.json()
-        return data.get('runtime', None)
-    
-    except Exception as e: 
-        print(f"Error fetching runtime: {e}")
-        return None
+        languages = response.json()
+        return languages
+    except Exception as e:
+        print(f"Error: {e}")
+        return []
