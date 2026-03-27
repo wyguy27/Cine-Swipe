@@ -1,5 +1,5 @@
 from flask import Flask, render_template, jsonify, request
-from tmdb_client import fetch_movie_list, fetch_genres
+import tmdb_client as tmdb
 
 app = Flask(__name__)
 
@@ -22,20 +22,36 @@ def start():
 # Gets the list of movie genres from API and sends it to the frontend in JSON format
 @app.route('/api/genres')
 def get_genres():
-    genres = fetch_genres()
+    genres = tmdb.fetch_genres()
     return jsonify(genres)
+
+# Gets the list of languages from the API and sends it to the frontend in JSON format
+@app.route('/api/languages')
+def get_languages():
+    languages = tmdb.fetch_languages()
+    return jsonify(languages)
 
 # Sends the next movie in the queue to the frontend in JSON format
 @app.route('/api/get-next-movie')
 def get_next_movie():
 
     # queue of next movies to show
-    global MOVIE_QUEUE
+    global MOVIE_QUEUE, CURRENT_PAGE
+
+    CURRENT_PAGE = 0
     
+    filters = {
+                    "include_adult": request.args.get('isAdult')
+                    "with_genres": request.args.get('genre'),
+                    "with_language": request.args.get('lang'),
+                    "page": CURRENT_PAGE
+                }
+
     # If the list is empty, refill it from the API
     if not MOVIE_QUEUE:
         print("Queue empty! Fetching new movies from TMDB...")
-        MOVIE_QUEUE = fetch_movie_list()
+        CURRENT_PAGE += 1
+        MOVIE_QUEUE = tmdb.fetch_movie_list(filters)
     
     # If we have movies, "pop" the first one off the list
     if MOVIE_QUEUE:
@@ -61,7 +77,7 @@ def handle_vote():
     return jsonify({"message": "Vote received", "liked_movies": LIKED_MOVIE, "disliked_movies": DISLIKED_MOVIE})
 
 
-    
+
 
 if __name__ == '__main__':
     app.run(debug=True)
