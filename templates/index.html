@@ -12,9 +12,7 @@
         </head>
         <body>
             <div class="image-container" id="imageContainer">
-                <div class="image-inner" id="imageInner">
-                    
-                </div>
+                <div class="image-inner" id="imageInner"> </div>
             </div>
             <div class="button-container">
                 <button class="button-dislike" onclick="getMovie(this)" id="dislike">NO</button>
@@ -27,37 +25,42 @@
 </html>
 
 <script>
+    const card = document.querySelector(".image-inner");
+    card.addEventListener("click", function (e) {
+        card.classList.toggle('is-flipped');
+    });
+
     var pastMovie = "";
 async function getMovie(button){
     
     
     if (button != null) {
+        if (pastMovie === "") return;
+
         //console.log(typeof pastMovie);
-        const card = document.getElementById("image");
+        const card = document.getElementById("imageInner");
         const pastMovieJSON = JSON.parse(pastMovie);
         pastMovieJSON["vote"] = button.id;        
-        const response = await fetch("api/vote", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(pastMovieJSON)
-        });
-        console.log("Sending" + JSON.stringify(pastMovieJSON));
-        //const data = await response.json();
-        //console.log(data.message);
+        const response = await Promise.all([
+            fetch("api/vote", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(pastMovieJSON)
+            }),
+            new Promise(r => {
+                const isFlipped = card.classList.contains('is-flipped');
+                const flipY = isFlipped ? "rotateY(180deg)" : "";
 
-        card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
-        card.style.transform = `translateX(${button.textContent == "YES" ? 1000 : -1000}px) rotate(${button.textContent == "NO" ? -45 : 45}deg)`;
-        card.style.opacity = 0;
-    
-
-        setTimeout(() => {
-            card.remove();
-        }, 400);
+                card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
+                card.style.transform = `translateX(${button.id === "like" ? 1000 : -1000}px) rotate(${button.id === "like" ? 45 : -45}deg) ${flipY}`;
+                card.style.opacity = 0;
+                setTimeout(r, 400);
+            })
+        ]);
         
-
-
+        card.innerHTML = "";
+        card.style.cssText = "";
+        card.classList.remove('is-flipped');
 
     }
 
@@ -68,21 +71,48 @@ async function getMovie(button){
     const movie = await response.json();
 
     if(!("error" in movie)){
-        const container = document.getElementById("imageContainer");
-        container.innerHTML = "";
+        const cardContainer = document.getElementById("imageInner");
+
+        const frontCont = document.createElement('div');
+        frontCont.classList.add('image_face', 'image_face--front');
+
+        const imageContent = document.createElement('div');
+        imageContent.classList.add('image_content');
+
+        const backCont = document.createElement('div');
+        backCont.classList.add('image_face', 'image_face--back');
+
+        // creating card header
+        const cardHeader = document.createElement('div');
+        cardHeader.classList.add('card_header')
+        const cardHeader_text = document.createElement("h2");
+        cardHeader_text.textContent = movie["title"];
+        cardHeader.appendChild(cardHeader_text);
+        backCont.appendChild(cardHeader); 
+
+        frontCont.innerHTML = "";
+        const textContainer = document.createElement('div');
+        textContainer.classList.add('image_body');
+        textContainer.innerHTML = "";
 
         //creates poster image
         const newCard = document.createElement("img");
         newCard.id = "image";
         newCard.className = "image";
-        newCard.id = "image";
         newCard.src = movie["poster_path"];
         pastMovie = JSON.stringify(movie, null, 2);
         console.log("Storing Movie" + pastMovie);
-        container.appendChild(newCard);
+        frontCont.appendChild(newCard);
+        
+        //creates text info
+        const textInfo = document.createElement("p");
+        textInfo.textContent = movie["overview"];
+        textContainer.appendChild(textInfo);
+        backCont.appendChild(textContainer); 
+ 
+        cardContainer.appendChild(frontCont);  
+        cardContainer.appendChild(backCont);   
 
-        //create back of image
-        const newBackCard = document.createElement("")
     }
 }
 
