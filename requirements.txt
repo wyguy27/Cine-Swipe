@@ -1,5 +1,3 @@
-# install flask
 flask
-
-# install requests
 requests
+python-dotenv

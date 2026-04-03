@@ -19,7 +19,7 @@ def fetch_movie_list(filters):
 
     headers = {
         "accept": "application/json",
-        "Authorization": "Bearer " + api_key 
+        "Authorization": "Bearer " + api_key
     }
     try:
         response = requests.get(url, headers=headers, params=params)
