@@ -9,11 +9,12 @@ api_key = os.getenv("TMDB_API_KEY")
 search_url = "https://api.themoviedb.org/3/discover/movie"
 
 # fetches list of movies from api
-def fetch_movie_list():
-    url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc"
+def fetch_movie_list(page):
+    
+    url = "https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page="+str(page)+"&sort_by=popularity.desc"
     headers = {
         "accept": "application/json",
-        "Authorization": "Bearer " + api_key 
+        "Authorization": "Bearer " + api_key
     }
     try:
         response = requests.get(url, headers=headers)
