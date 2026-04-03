@@ -22,6 +22,13 @@ DISLIKED_MOVIE = []
 
 page = 1
 
+
+def ensure_participant_id():
+    """Stable per-browser id for attributing swipes in group sessions."""
+    if not session.get("participant_id"):
+        session["participant_id"] = secrets.token_urlsafe(16)
+
+
 @app.route("/")
 def home():
     return render_template("homepage.html")
@@ -50,6 +57,7 @@ def api_create_room():
     session["room_code"] = code
     session["role"] = "host"
     session["host_token"] = host_token
+    ensure_participant_id()
     return jsonify(
         {
             "code": code,
@@ -75,6 +83,7 @@ def join_room_submit():
     session["room_code"] = code
     session["role"] = "guest"
     session.pop("host_token", None)
+    ensure_participant_id()
     return redirect(url_for("room_lobby", code=code))
 
 
@@ -86,6 +95,7 @@ def join_with_link(code):
     session["room_code"] = code
     session["role"] = "guest"
     session.pop("host_token", None)
+    ensure_participant_id()
     return redirect(url_for("room_lobby", code=code))
 
 
@@ -97,6 +107,7 @@ def room_lobby(code):
         return render_template("room.html", error="not_found", code=code), 404
     if session.get("room_code") != code:
         return redirect(url_for("join_page", code=code))
+    ensure_participant_id()
     role = session.get("role")
     host_token = session.get("host_token")
     is_host = role == "host" and host_token == room["host_token"]
@@ -134,6 +145,24 @@ def api_start_swiping(code):
         return jsonify({"error": "host_only"}), 403
     room_store.mark_session_started(code)
     return jsonify({"ok": True})
+
+
+@app.route("/api/rooms/<code>/swipes")
+def api_room_swipes(code):
+    """All participants' like/dislike lists for this room (must be in the room)."""
+    code = room_store.normalize_code(code)
+    if session.get("room_code") != code:
+        return jsonify({"error": "forbidden"}), 403
+    if room_store.get_room(code) is None:
+        return jsonify({"error": "not_found"}), 404
+    ensure_participant_id()
+    summary = room_store.get_all_swipes(code) or {}
+    return jsonify(
+        {
+            "you": session["participant_id"],
+            "by_participant": summary,
+        }
+    )
 
 
 @app.route("/room/leave", methods=["POST"])
@@ -185,13 +214,37 @@ def get_next_movie():
 
 @app.route("/api/vote", methods=["POST"])
 def handle_vote():
-    data = request.json
+    data = request.json or {}
     movie_id = data.get("id")
     vote_type = data.get("vote")
 
+    if vote_type not in ("like", "dislike"):
+        return jsonify({"error": "vote must be like or dislike"}), 400
+
+    room_code = session.get("room_code")
+    if room_code:
+        ensure_participant_id()
+        code = room_store.normalize_code(room_code)
+        if room_store.get_room(code) is None:
+            return jsonify({"error": "room not found"}), 404
+        pid = session["participant_id"]
+        room_store.record_swipe(code, pid, movie_id, vote_type)
+        bucket = room_store.get_participant_swipes(code, pid) or {
+            "likes": [],
+            "dislikes": [],
+        }
+        return jsonify(
+            {
+                "message": "Vote received",
+                "liked_movies": bucket["likes"],
+                "disliked_movies": bucket["dislikes"],
+                "in_room": True,
+            }
+        )
+
     if vote_type == "like":
         LIKED_MOVIE.append(movie_id)
-    elif vote_type == "dislike":
+    else:
         DISLIKED_MOVIE.append(movie_id)
 
     return jsonify(
@@ -199,6 +252,7 @@ def handle_vote():
             "message": "Vote received",
             "liked_movies": LIKED_MOVIE,
             "disliked_movies": DISLIKED_MOVIE,
+            "in_room": False,
         }
     )
 
