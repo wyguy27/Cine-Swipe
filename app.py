@@ -6,6 +6,7 @@ from flask import Flask, jsonify, redirect, render_template, request, session, u
 
 from tmdb_client import fetch_genres, fetch_movie_list
 import room_store
+import tmdb_client as tmdb
 
 load_dotenv()
 
@@ -145,17 +146,32 @@ def leave_room():
 
 @app.route("/api/genres")
 def get_genres():
-    genres = fetch_genres()
+    genres = tmdb.fetch_genres()
     return jsonify(genres)
 
 
-@app.route("/api/get-next-movie")
+# Gets the list of languages from the API and sends it to the frontend in JSON format
+@app.route('/api/languages')
+def get_languages():
+    languages = tmdb.fetch_languages()
+    return jsonify(languages)
+
+# Sends the next movie in the queue to the frontend in JSON format
+@app.route('/api/get-next-movie')
 def get_next_movie():
     global MOVIE_QUEUE, page
 
+    # Optionally handle page or filter resets. If you wish, adjust logic here
+    filters = {
+        "include_adult": request.args.get('isAdult'),
+        "with_genres": request.args.get('genre'),
+        "with_language": request.args.get('lang'),
+        "page": page
+    }
+
     if not MOVIE_QUEUE:
         print("Queue empty! Fetching new movies from TMDB...")
-        MOVIE_QUEUE = fetch_movie_list(page)
+        MOVIE_QUEUE = tmdb.fetch_movie_list(filters)
         page += 1
         if page > 500:
             page = 1
@@ -187,5 +203,7 @@ def handle_vote():
     )
 
 
-if __name__ == "__main__":
+
+
+if __name__ == '__main__':
     app.run(debug=True)

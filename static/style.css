@@ -6,12 +6,10 @@ html, body{
 .image {
     position: absolute;
     width: 100%;
-    height: 70vh;
+    height: 100%;
     border-radius: 10px;
     transition: transform -.3s ease, opcity 0.3s ease;
     will-change: transform;
-    box-shadow: 0 10px 30px black,
-    inset 0 0 0 1px black;
 }
 
 .container{
