@@ -85,10 +85,18 @@ async function getMovie(button){
         // creating card header
         const cardHeader = document.createElement('div');
         cardHeader.classList.add('image_header')
-        const cardHeader_text = document.createElement("h2");
-        cardHeader_text.textContent = movie["title"];
-        cardHeader.appendChild(cardHeader_text);
+        const cardHeader_title = document.createElement("h2");
+        cardHeader_title.textContent = movie["title"];
+        cardHeader.appendChild(cardHeader_title);
         backCont.appendChild(cardHeader); 
+
+        // creating vote count and vote
+        const cardVotes = document.createElement('div');
+        cardVotes.classList.add('image_header')
+        const cardHeader_vote = document.createElement("h2");
+        cardHeader_vote.textContent = movie["vote_count"] + " " + movie["vote_average"];
+        cardVotes.appendChild(cardHeader_vote);
+        backCont.appendChild(cardVotes); 
 
         frontCont.innerHTML = "";
         const textContainer = document.createElement('div');
