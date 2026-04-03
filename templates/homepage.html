@@ -67,41 +67,45 @@
             </nav>
         </div>
         <div class="homescreen">
+            <div>
             <section class="session-panel" aria-label="Group session">
                 <h2>Play with friends</h2>
                 <p class="session-hint">Host opens a room; everyone else joins with a code or link.</p>
                 <button type="button" id="createHost">Host a session</button>
                 <a class="btn-session" href="{{ url_for('join_page') }}">Join with a code</a>
                 <p id="hostErr" class="host-err" hidden></p>
-                <button id="more-options" onclick="showForm()">More Options</button>
+                <button id="more-options" onclick="document.getElementById('formDialog').showModal()">More Options</button>
 
             </section>
+            </div>
+            <dialog id="formDialog">
+                <form id="prefsForm">
+                    <button type="button" onclick="document.getElementById('formDialog').close()">X Close</button>
+                    <label for="isAdult">Adult?</label>
+                    <input type="radio" id="isAdult" name="isAdult" value="yes">
+                    
+                    <div id="genres">Genres: </div>
 
-            <form id="prefsForm">
-                <label for="isAdult">Adult?</label>
-                <input type="radio" id="isAdult" name="isAdult" value="yes">
-                
-                <div id="genres">Genres: </div>
+                    <div id="lang">Languages: </div>
 
-                <div id="lang">Languages: </div>
+                    <label for="start">Date Released from:</label>
+                    <input type="date" id="start" name="startDate"
+                        value="2025-01-01"
+                        min="2025-01-01" max="2025-12-31">
 
-                <label for="start">Date Released from:</label>
-                <input type="date" id="start" name="startDate"
-                    value="2025-01-01"
-                    min="2025-01-01" max="2025-12-31">
+                    <label for="end">To:</label>
+                    <input type="date" id="end" name="endDate"
+                        value="2025-01-01"
+                        min="2025-01-01" max="2025-12-31">
 
-                <label for="end">To:</label>
-                <input type="date" id="end" name="endDate"
-                    value="2025-01-01"
-                    min="2025-01-01" max="2025-12-31">
-
-                <label for="rating">Rating (1.0 to 10.0):</label>
-                <input type="range" id="rating" name="rating" min="1.0" max="10.0" step="0.1">
-                <output id="ratingValue">5.0</output>
+                    <label for="rating">Rating (1.0 to 10.0):</label>
+                    <input type="range" id="rating" name="rating" min="1.0" max="10.0" step="0.1">
+                    <output id="ratingValue">5.0</output>
 
 
-                <input type="submit" value="Submit">
-            </form>
+                    <input type="submit" value="Submit">
+                </form>
+            </dialog>
         </div>
 
         <button type="button" onclick="start()">Start</button>
