@@ -90,20 +90,12 @@ async function getMovie(button){
         cardHeader.appendChild(cardHeader_title);
         backCont.appendChild(cardHeader); 
 
-        // creating vote count and vote
-        const cardVotes = document.createElement('div');
-        cardVotes.classList.add('image_header')
-        const cardHeader_vote = document.createElement("h2");
-        cardHeader_vote.textContent = movie["vote_count"] + " " + movie["vote_average"];
-        cardVotes.appendChild(cardHeader_vote);
-        backCont.appendChild(cardVotes); 
-
         frontCont.innerHTML = "";
         const textContainer = document.createElement('div');
         textContainer.classList.add('image_body');
         textContainer.innerHTML = "";
 
-        //creates poster image
+        // creates poster image
         const newCard = document.createElement("img");
         newCard.id = "image";
         newCard.className = "image";
@@ -112,9 +104,22 @@ async function getMovie(button){
         console.log("Storing Movie" + pastMovie);
         frontCont.appendChild(newCard);
         
-        //creates text info
+        // check the genre of the movie
+        genresString = [];
+        movieGenre = movie["genre_ids"];
+        console.log(movieGenre);
+        const genres = await fetch("/api/genres").then(function (response) { return response.json(); });
+        console.log(genres);
+        for (const genre of genres){
+            console.log("genre: " + genre["id"]);
+            if (movieGenre.includes(genre["id"])){
+                genresString.push(" " + genre["name"]);
+            }
+        }
+
+        // creates text info
         const textInfo = document.createElement("p");
-        textInfo.textContent = movie["overview"];
+        textInfo.innerHTML = "Rating: " + movie["vote_average"] + "/10 <br><br> Votes: " + movie["vote_count"] + "<br><br> Genres: " + genresString + "<br><br> Description: " + movie["overview"];
         textContainer.appendChild(textInfo);
         backCont.appendChild(textContainer); 
  

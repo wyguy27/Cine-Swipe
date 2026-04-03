@@ -75,16 +75,18 @@ html, body{
 .image_face--back {
     background-color: beige;
     transform: rotateY(180deg);
+    overflow-y: auto;
 }
 
 .image_content {
     width: 100%;
     height: 100%;
+    overflow-y: auto;
 }
 
 .image_header {
     position: relative;
-    padding: 30px 30px 40px;
+    padding: 30px 30px 0px;
 }
 
 .image_header:after {
@@ -96,14 +98,14 @@ html, body{
     right: 0;
     bottom: 0;
     z-index: -1;
-    border-radius: 0px 0px 50% 0px;
+    border-radius: 0px 0px 30% 0px;
 }
 
 .pp {
     display: block;
     width: 128px;
     height: 128px;
-    margin: 0 auto 30px;
+    margin: 0 auto 20px;
     border-radius: 50%;
     background-color: #FFF;
     border: 5px solid #FFF;
@@ -111,7 +113,7 @@ html, body{
 }
 
 .image_header h2 {
-    color: #FFF;
+    color: #000000;
     font-size: 32px;
     font-weight: 900;
     text-transform: uppercase;
