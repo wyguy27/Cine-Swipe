@@ -4,7 +4,6 @@ import secrets
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
-from tmdb_client import fetch_genres, fetch_movie_list
 import room_store
 import tmdb_client as tmdb
 
@@ -27,6 +26,28 @@ def ensure_participant_id():
     """Stable per-browser id for attributing swipes in group sessions."""
     if not session.get("participant_id"):
         session["participant_id"] = secrets.token_urlsafe(16)
+
+
+def parse_host_discover_payload() -> dict[str, str]:
+    """Body for POST /api/rooms: host's TMDB discover constraints for the session."""
+    data = request.get_json(silent=True) or {}
+    include_adult = bool(data.get("include_adult"))
+    out: dict[str, str] = {
+        "include_adult": "true" if include_adult else "false",
+    }
+    raw_ids = data.get("genre_ids") or []
+    ids: list[int] = []
+    for x in raw_ids:
+        try:
+            ids.append(int(x))
+        except (TypeError, ValueError):
+            continue
+    if ids:
+        out["with_genres"] = ",".join(str(i) for i in ids)
+    lang = data.get("language")
+    if isinstance(lang, str) and lang.strip() and len(lang.strip()) <= 12:
+        out["with_original_language"] = lang.strip()
+    return out
 
 
 @app.route("/")
@@ -52,8 +73,9 @@ def start():
 
 @app.route("/api/rooms", methods=["POST"])
 def api_create_room():
+    discover = parse_host_discover_payload()
     host_token = secrets.token_urlsafe(32)
-    code = room_store.create_room(host_token)
+    code = room_store.create_room(host_token, discover)
     session["room_code"] = code
     session["role"] = "host"
     session["host_token"] = host_token
@@ -186,17 +208,43 @@ def get_languages():
     return jsonify(languages)
 
 # Sends the next movie in the queue to the frontend in JSON format
-@app.route('/api/get-next-movie')
+@app.route("/api/get-next-movie")
 def get_next_movie():
     global MOVIE_QUEUE, page
 
-    # Optionally handle page or filter resets. If you wish, adjust logic here
-    filters = {
-        "include_adult": request.args.get('isAdult'),
-        "with_genres": request.args.get('genre'),
-        "with_language": request.args.get('lang'),
-        "page": page
-    }
+    room_code = session.get("room_code")
+    if room_code:
+        code = room_store.normalize_code(room_code)
+        room = room_store.get_room(code)
+        if room is None:
+            return jsonify({"error": "No movies available"}), 404
+
+        q = room.setdefault("movie_queue", [])
+        if not q:
+            dfilters = dict(room.get("discover_filters") or {"include_adult": "false"})
+            p = int(room.get("discover_page") or 1)
+            fetch_params = dict(dfilters)
+            fetch_params["page"] = p
+            batch = tmdb.fetch_movie_list(fetch_params)
+            room["discover_page"] = p + 1
+            if room["discover_page"] > 500:
+                room["discover_page"] = 1
+            q.extend(batch)
+
+        if q:
+            return jsonify(q.pop(0))
+        return jsonify({"error": "No movies available"}), 404
+
+    filters: dict = {}
+    if request.args.get("isAdult") == "yes":
+        filters["include_adult"] = "true"
+    elif request.args.get("isAdult") == "no":
+        filters["include_adult"] = "false"
+    if request.args.get("genre"):
+        filters["with_genres"] = request.args.get("genre")
+    if request.args.get("lang"):
+        filters["with_original_language"] = request.args.get("lang")
+    filters["page"] = page
 
     if not MOVIE_QUEUE:
         print("Queue empty! Fetching new movies from TMDB...")
@@ -206,9 +254,7 @@ def get_next_movie():
             page = 1
 
     if MOVIE_QUEUE:
-        single_movie = MOVIE_QUEUE.pop(0)
-        return jsonify(single_movie)
-
+        return jsonify(MOVIE_QUEUE.pop(0))
     return jsonify({"error": "No movies available"}), 404
 
 

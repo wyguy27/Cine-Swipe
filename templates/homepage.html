@@ -75,7 +75,7 @@
             <p id="hostErr" class="host-err" hidden></p>
         </section>
 
-        <form>
+        <form id="prefsForm">
             <input type="radio" id="isAdult" name="isAdult" value="yes">
             <label for="isAdult">Adult?</label>
 
@@ -91,8 +91,21 @@
         document.getElementById("createHost").addEventListener("click", async function () {
             const err = document.getElementById("hostErr");
             err.hidden = true;
+            const includeAdult = document.getElementById("isAdult").checked;
+            const genreIds = [];
+            document.querySelectorAll("#genres input[type=\"checkbox\"]:checked").forEach(function (cb) {
+                const id = parseInt(cb.id, 10);
+                if (!isNaN(id)) genreIds.push(id);
+            });
             try {
-                const r = await fetch("{{ url_for('api_create_room') }}", { method: "POST" });
+                const r = await fetch("{{ url_for('api_create_room') }}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        include_adult: includeAdult,
+                        genre_ids: genreIds
+                    })
+                });
                 if (!r.ok) throw new Error("Could not create room");
                 const d = await r.json();
                 window.location.href = d.room_url;
@@ -103,6 +116,10 @@
         });
     </script>
     <script>
+        document.getElementById("prefsForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+        });
+
         window.onload = function () {
             populateGenres();
         };

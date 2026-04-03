@@ -15,6 +15,9 @@ class Room(TypedDict, total=False):
     created_at: float
     session_started: bool
     member_swipes: dict[str, dict[str, list[int]]]
+    discover_filters: dict[str, str]
+    movie_queue: list
+    discover_page: int
 
 
 rooms: dict[str, Room] = {}
@@ -24,7 +27,8 @@ def _random_code() -> str:
     return "".join(secrets.choice(CODE_ALPHABET) for _ in range(CODE_LENGTH))
 
 
-def create_room(host_token: str) -> str:
+def create_room(host_token: str, discover_filters: dict[str, str] | None = None) -> str:
+    base_filters = discover_filters or {"include_adult": "false"}
     for _ in range(100):
         code = _random_code()
         if code not in rooms:
@@ -33,6 +37,9 @@ def create_room(host_token: str) -> str:
                 "created_at": time.time(),
                 "session_started": False,
                 "member_swipes": {},
+                "discover_filters": dict(base_filters),
+                "movie_queue": [],
+                "discover_page": 1,
             }
             return code
     raise RuntimeError("Could not allocate a room code")
