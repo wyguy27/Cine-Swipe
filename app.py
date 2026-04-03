@@ -38,10 +38,10 @@ def get_next_movie():
     # queue of next movies to show
     global MOVIE_QUEUE, CURRENT_PAGE
 
-    CURRENT_PAGE = 0
+    CURRENT_PAGE = 1
     
     filters = {
-                    "include_adult": request.args.get('isAdult')
+                    "include_adult": request.args.get('isAdult'),
                     "with_genres": request.args.get('genre'),
                     "with_language": request.args.get('lang'),
                     "page": CURRENT_PAGE
