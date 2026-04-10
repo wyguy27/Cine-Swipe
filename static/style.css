@@ -180,7 +180,7 @@ button {
     max-width: 50%;
 }
 
-form {
+#prefsForm {
     background: #fbeedb;
     height: 50vh;
     padding: 25px 30px;
@@ -300,4 +300,8 @@ input[type="submit"]:hover {
 #formDialog {
     background-color: transparent;
     border: transparent;
+}
+
+#homepage-title {
+    font-size: 100px;
 }

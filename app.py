@@ -53,6 +53,10 @@ def parse_host_discover_payload() -> dict[str, str]:
 def home():
     return render_template("homepage.html")
 
+@app.route("/about")
+def about():
+    return render_template("about.html")
+
 
 @app.route("/start")
 def start():
