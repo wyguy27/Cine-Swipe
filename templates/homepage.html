@@ -63,9 +63,13 @@
                 <a href="{{ url_for('home') }}">
                     <img class="icon" src="{{ url_for('static', filename='icons/home.png') }}" alt="Home"/>
                 </a>
-                <a href="about.html">About</a>
+                <a href="{{url_for('about')}}">
+                    <img class="icon" src="{{url_for('static', filename='icons/aboutus.png')}}" alt="About Us"/>
+                </a>
             </nav>
         </div>
+        <div>
+        <h1 id="homepage-title">CINE-SWIPE</h1>
         <div class="homescreen">
             <div>
             <section class="session-panel" aria-label="Group session">
@@ -74,15 +78,16 @@
                 <button type="button" id="createHost">Host a session</button>
                 <a class="btn-session" href="{{ url_for('join_page') }}">Join with a code</a>
                 <p id="hostErr" class="host-err" hidden></p>
-                <button id="more-options" onclick="document.getElementById('formDialog').showModal()">More Options</button>
+                <button class="btn-secondary" onclick="document.getElementById('formDialog').showModal()">More Options</button>
 
             </section>
             </div>
             <dialog id="formDialog">
                 <form id="prefsForm">
                     <button type="button" onclick="document.getElementById('formDialog').close()">X Close</button>
+
                     <label for="isAdult">Adult?</label>
-                    <input type="radio" id="isAdult" name="isAdult" value="yes">
+                    <input type="checkbox" id="isAdult" name="isAdult" value="yes">
                     
                     <div id="genres">Genres: </div>
 
@@ -103,12 +108,13 @@
                     <output id="ratingValue">5.0</output>
 
 
-                    <input type="submit" value="Submit">
+                    <input type="submit" value="Submit" >
                 </form>
             </dialog>
         </div>
+        </div>
 
-        <button type="button" onclick="start()">Start</button>
+        <!-- <button type="button" onclick="start()">Start</button> -->
     </div>
 
 <script>
