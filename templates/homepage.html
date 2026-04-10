@@ -73,6 +73,16 @@
             border: 1px solid #ccc;
             box-sizing: border-box;
         }
+        #langSelect {
+            width: 100%;
+            max-width: 100%;
+            min-height: 10rem;
+            padding: 0.35rem;
+            font: inherit;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
         .genre-hint {
             font-size: 0.75rem;
             color: #555;
@@ -126,7 +136,11 @@
                         <p id="genreHint" class="genre-hint">Hold <kbd>Ctrl</kbd> (Windows) or <kbd>⌘</kbd> (Mac) and click to select more than one.</p>
                     </div>
 
-                    <div id="lang">Languages: </div>
+                    <div class="lang-field"> 
+                        <label for="langSelect">Languages</label>
+                        <select id="langSelect" name="languages" multiple size="10" aria-describedby="languageHint"></select>
+                        <p id="genreHint" class="genre-hint">Hold <kbd>Ctrl</kbd> (Windows) or <kbd>⌘</kbd> (Mac) and click to select more than one.</p>                        
+                    </div>
 
                     <label for="start">Date Released from:</label>
                     <input type="date" id="start" name="startDate"
@@ -177,25 +191,19 @@
 
     async function populateLang() {
         const langs = await fetch("/api/languages").then(function (r) { return r.json(); });
-        const langList = document.getElementById("lang");
+        const langList = document.getElementById("langSelect");
         if (!langList) return;
         langs.forEach(function (row, idx) {
-            const input = document.createElement("input");
-            input.type = "checkbox";
-            input.id = "lang-" + (row.iso_639_1 || row.code || "i" + idx);
-            input.value = row.english_name || row.name || "";
-            const label = document.createElement("label");
-            label.htmlFor = input.id;
-            label.textContent = row.english_name || row.name || "";
-            const container = document.createElement("div");
-            container.appendChild(input);
-            container.appendChild(label);
-            langList.appendChild(container);
+            const input = document.createElement("option");
+            input.value = "lang-" + (row.iso_639_1 || row.code || "i" + idx);
+            input.textContent = row.english_name || row.name || "";
+            langList.appendChild(input);
         });
     }
 
     window.onload = function () {
         populateGenres();
+        populateLang();
     };
 
     document.getElementById("prefsForm").addEventListener("submit", function (e) {
