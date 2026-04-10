@@ -245,9 +245,8 @@ def get_next_movie():
         filters["with_original_language"] = request.args.get("lang")
     filters["page"] = page
 
-    if not MOVIE_QUEUE:
-        print("Queue empty! Fetching new movies from TMDB...")
-        MOVIE_QUEUE = tmdb.fetch_movie_list(filters)
+    if len(MOVIE_QUEUE) < 5:
+        MOVIE_QUEUE.append(tmdb.fetch_movie_list(filters))
         page += 1
         if page > 500:
             page = 1
