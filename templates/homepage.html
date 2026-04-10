@@ -54,6 +54,37 @@
             margin: 0.5rem 0 0;
             font-size: 0.9rem;
         }
+        .genre-field {
+            margin: 0.75rem 0;
+            text-align: left;
+        }
+        .genre-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+        #genreSelect {
+            width: 100%;
+            max-width: 100%;
+            min-height: 10rem;
+            padding: 0.35rem;
+            font: inherit;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .genre-hint {
+            font-size: 0.75rem;
+            color: #555;
+            margin: 0.35rem 0 0;
+        }
+        .genre-hint kbd {
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            font-size: 0.7rem;
+        }
     </style>
 </head>
 <body>
@@ -88,8 +119,12 @@
 
                     <label for="isAdult">Adult?</label>
                     <input type="checkbox" id="isAdult" name="isAdult" value="yes">
-                    
-                    <div id="genres">Genres: </div>
+
+                    <div class="genre-field">
+                        <label for="genreSelect">Genres</label>
+                        <select id="genreSelect" name="genres" multiple size="10" aria-describedby="genreHint"></select>
+                        <p id="genreHint" class="genre-hint">Hold <kbd>Ctrl</kbd> (Windows) or <kbd>⌘</kbd> (Mac) and click to select more than one.</p>
+                    </div>
 
                     <div id="lang">Languages: </div>
 
@@ -118,149 +153,94 @@
     </div>
 
 <script>
-    window.onload = () =>{
-        populateGenres();
-        // populateLang(); //still need function to populate languages
-    }
-
-    function start(){
+    function start() {
         window.location.href = "/start";
     }
 
-    function select(id){
+    function select(id) {
         var opt = document.getElementById(id);
-        opt.select= !opt.select;
+        if (opt) opt.select = !opt.select;
     }
 
-    async function populateGenres(){
-        const genres = await fetch('/api/genres').then(response => response.json());
-        console.log(genres);
-        const genreList = document.getElementById('genres')
-        genres.forEach(genre => {
-            const input = document.createElement('input');
-            input.type = "checkbox";
-            input.id = genre.id;
-            input.value = genre.name;
-            
-
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.textContent = genre.name;
-
-            genreList.appendChild(input);
-            genreList.appendChild(label);
+    async function populateGenres() {
+        const genres = await fetch("/api/genres").then(function (r) { return r.json(); });
+        const sel = document.getElementById("genreSelect");
+        if (!sel) return;
+        sel.innerHTML = "";
+        genres.forEach(function (genre) {
+            const opt = document.createElement("option");
+            opt.value = String(genre.id);
+            opt.textContent = genre.name;
+            sel.appendChild(opt);
         });
     }
 
-    async function populateLang(){
-        const lang = await fetch('/api/languages').then(response => response.json());
-        console.log(lang);
-        const langList = document.getElementById('lang')
-        genres.forEach(genre => {
-            const input = document.createElement('input');
+    async function populateLang() {
+        const langs = await fetch("/api/languages").then(function (r) { return r.json(); });
+        const langList = document.getElementById("lang");
+        if (!langList) return;
+        langs.forEach(function (row, idx) {
+            const input = document.createElement("input");
             input.type = "checkbox";
-            input.id = lang.id;
-            input.value = lang.name;
-            
-
-            const label = document.createElement('label');
+            input.id = "lang-" + (row.iso_639_1 || row.code || "i" + idx);
+            input.value = row.english_name || row.name || "";
+            const label = document.createElement("label");
             label.htmlFor = input.id;
-            label.textContent = lang.name;
-
-            const container = document.createElement('div');
-
+            label.textContent = row.english_name || row.name || "";
+            const container = document.createElement("div");
             container.appendChild(input);
             container.appendChild(label);
-
             langList.appendChild(container);
         });
     }
 
-    // Get the elements
-    const rangeInput = document.getElementById("rating");
-    const valueDisplay = document.getElementById("ratingValue");
+    window.onload = function () {
+        populateGenres();
+    };
 
-    // Add an event listener to update the display as the slider moves
-    rangeInput.addEventListener("input", function() {
-        valueDisplay.textContent = this.value;
+    document.getElementById("prefsForm").addEventListener("submit", function (e) {
+        e.preventDefault();
     });
 
-    function showForm(){
-        var form = document.getElementById('prefsForm');
-
-        if(form.style.display === "flex"){
-            form.style.display = "none";
+    document.addEventListener("DOMContentLoaded", function () {
+        const rangeInput = document.getElementById("rating");
+        const valueDisplay = document.getElementById("ratingValue");
+        if (rangeInput && valueDisplay) {
+            rangeInput.addEventListener("input", function () {
+                valueDisplay.textContent = this.value;
+            });
         }
-        else {
-            form.style.display = "flex";
-        }
-    }
+    });
 
-</script>
-    <script>
-        document.getElementById("createHost").addEventListener("click", async function () {
-            const err = document.getElementById("hostErr");
-            err.hidden = true;
-            const includeAdult = document.getElementById("isAdult").checked;
-            const genreIds = [];
-            document.querySelectorAll("#genres input[type=\"checkbox\"]:checked").forEach(function (cb) {
-                const id = parseInt(cb.id, 10);
+    document.getElementById("createHost").addEventListener("click", async function () {
+        const err = document.getElementById("hostErr");
+        err.hidden = true;
+        const includeAdult = document.getElementById("isAdult").checked;
+        const genreIds = [];
+        const sel = document.getElementById("genreSelect");
+        if (sel) {
+            for (let i = 0; i < sel.selectedOptions.length; i++) {
+                const id = parseInt(sel.selectedOptions[i].value, 10);
                 if (!isNaN(id)) genreIds.push(id);
-            });
-            try {
-                const r = await fetch("{{ url_for('api_create_room') }}", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        include_adult: includeAdult,
-                        genre_ids: genreIds
-                    })
-                });
-                if (!r.ok) throw new Error("Could not create room");
-                const d = await r.json();
-                window.location.href = d.room_url;
-            } catch (e) {
-                err.textContent = "Could not create a session. Try again.";
-                err.hidden = false;
             }
-        });
-    </script>
-    <script>
-        document.getElementById("prefsForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-        });
-
-        window.onload = function () {
-            populateGenres();
-        };
-
-        function start() {
-            window.location.href = "/start";
         }
-
-        function select(id) {
-            var opt = document.getElementById(id);
-            opt.select = !opt.select;
-        }
-
-        async function populateGenres() {
-            const genres = await fetch("/api/genres").then(function (response) { return response.json(); });
-            console.log(genres);
-            const genreList = document.getElementById("genres");
-            genres.forEach(function (genre) {
-                const input = document.createElement("input");
-                input.type = "checkbox";
-                input.id = String(genre.id);
-                input.value = genre.name;
-
-                const label = document.createElement("label");
-                label.htmlFor = input.id;
-                label.textContent = genre.name;
-
-                genreList.appendChild(input);
-                genreList.appendChild(label);
+        try {
+            const r = await fetch("{{ url_for('api_create_room') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    include_adult: includeAdult,
+                    genre_ids: genreIds
+                })
             });
+            if (!r.ok) throw new Error("Could not create room");
+            const d = await r.json();
+            window.location.href = d.room_url;
+        } catch (e) {
+            err.textContent = "Could not create a session. Try again.";
+            err.hidden = false;
         }
-    </script>
+    });
+</script>
 </body>
 </html>
