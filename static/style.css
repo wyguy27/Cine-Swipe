@@ -22,6 +22,15 @@ html, body{
     justify-content: space-evenly;
 }
 
+.page{
+    position: relative;
+    background-color:rgb(217, 188, 122);
+    height: 90vh;
+    width: 100vw;
+    align-items: center;
+    justify-content: space-evenly;
+}
+
 .image-container {
     position : relative;
     width: 400px;
@@ -66,16 +75,18 @@ html, body{
 .image_face--back {
     background-color: beige;
     transform: rotateY(180deg);
+    overflow-y: auto;
 }
 
 .image_content {
     width: 100%;
     height: 100%;
+    overflow-y: auto;
 }
 
 .image_header {
     position: relative;
-    padding: 30px 30px 40px;
+    padding: 30px 30px 0px;
 }
 
 .image_header:after {
@@ -87,14 +98,14 @@ html, body{
     right: 0;
     bottom: 0;
     z-index: -1;
-    border-radius: 0px 0px 50% 0px;
+    border-radius: 0px 0px 30% 0px;
 }
 
 .pp {
     display: block;
     width: 128px;
     height: 128px;
-    margin: 0 auto 30px;
+    margin: 0 auto 20px;
     border-radius: 50%;
     background-color: #FFF;
     border: 5px solid #FFF;
@@ -102,7 +113,7 @@ html, body{
 }
 
 .image_header h2 {
-    color: #FFF;
+    color: #000000;
     font-size: 32px;
     font-weight: 900;
     text-transform: uppercase;
@@ -158,8 +169,8 @@ button {
     flex-direction: row;
     justify-content: space-between;
     background-color: rgb(119, 33, 33);
-    height: 10%;
-    width: 100%;
+    height: 10vh;
+    width: 100vw;
 
 }
 
@@ -167,4 +178,126 @@ button {
     
     max-height: 50%;
     max-width: 50%;
+}
+
+form {
+    background: #fbeedb;
+    height: 50vh;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: scroll;
+
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+input[type="date"],
+input[type="range"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+input[type="radio"] {
+    margin-right: 8px;
+}
+
+#rating {
+    margin-top: 5px;
+}
+
+#ratingValue {
+    font-weight: bold;
+    text-align: right;
+}
+
+input[type="submit"] {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgb(119, 33, 33);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+input[type="submit"]:hover {
+    background: rgb(86, 23, 23);
+}
+
+#genres, #lang {
+    padding: 10px;
+    border: 1px dashed #ccc;
+    border-radius: 6px;
+    min-height: 40px;
+    background: #fafafa;
+    display: flex;
+    flex-wrap: wrap;
+    white-space: nowrap;
+}
+
+#startButton {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgb(119, 33, 33);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    width: 20vw;
+    height: 10vh;
+
+}
+
+#startButton:hover {
+    background: rgb(86, 23, 23);
+}
+
+#more-options {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgb(119, 33, 33);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    width: 20vw;
+    height: 10vh;
+
+}
+
+#more-options:hover {
+    background: rgb(86, 23, 23);
+}
+
+.starting-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.homescreen {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+#formDialog {
+    background-color: transparent;
+    border: transparent;
 }
