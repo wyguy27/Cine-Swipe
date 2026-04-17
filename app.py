@@ -92,6 +92,45 @@ def start():
             return redirect(url_for("room_lobby", code=code))
     return render_template("index.html")
 
+@app.route("/match")
+def match():
+    room_code = session.get("room_code")
+    if not room_code:
+        return redirect(url_for("home"))  # Redirect if not in a room
+    
+    code = room_store.normalize_code(room_code)
+    room = room_store.get_room(code)
+    if room is None or not room.get("session_started", False):
+        return redirect(url_for("home"))  # Redirect if room invalid or swiping not started
+    
+    # Fetch all swipes for the room
+    swipes_summary = room_store.get_all_swipes(code) or {}
+    if not swipes_summary:
+        return render_template("match.html", matches=[], error="No swipes yet.")
+    
+    # Get list of participant IDs
+    participants = list(swipes_summary.keys())
+    if len(participants) < 2:
+        return render_template("match.html", matches=[], error="Need at least 2 participants for matches.")
+    
+    # Find movie IDs liked by ALL participants
+    liked_by_all = set()
+    for movie_id in swipes_summary[participants[0]].keys():
+        if all(swipes_summary[p].get(movie_id) == "like" for p in participants):
+            liked_by_all.add(movie_id)
+
+        if not liked_by_all:
+            return render_template("match.html", matches=[], error="No matches found.")
+        
+    # Fetch movie details for matched IDs (assuming tmdb has a fetch_movie_details function)
+    matches = []
+    for movie_id in liked_by_all:
+        movie = tmdb.fetch_movie_details(movie_id)  # Implement this in tmdb_client if needed
+        if movie:
+            matches.append(movie)
+    
+    return render_template("match.html", matches=matches)
+
 
 @app.route("/api/rooms", methods=["POST"])
 def api_create_room():
