@@ -229,11 +229,14 @@ def get_languages():
     languages = tmdb.fetch_languages()
     return jsonify(languages)
 
+# Global storage for queues, pages, and filters (in-memory, keyed by user)
+movie_queues = {}
+movie_pages = {}
+movie_filters = {}
+
 # Sends the next movie in the queue to the frontend in JSON format
 @app.route("/api/get-next-movie")
 def get_next_movie():
-    global MOVIE_QUEUE, page
-
     room_code = session.get("room_code")
     if room_code:
         code = room_store.normalize_code(room_code)
@@ -241,23 +244,41 @@ def get_next_movie():
         if room is None:
             return jsonify({"error": "No movies available"}), 404
 
-        q = room.setdefault("movie_queue", [])
-        if not q:
-            dfilters = dict(room.get("discover_filters") or {"include_adult": "false"})
-            p = int(room.get("discover_page") or 1)
-            fetch_params = dict(dfilters)
-            fetch_params["page"] = p
-            batch = tmdb.fetch_movie_list(fetch_params)
-            room["discover_page"] = p + 1
-            if room["discover_page"] > 500:
-                room["discover_page"] = 1
-            q.extend(batch)
+        ensure_participant_id()
+        user_key = f"room_{code}_{session['participant_id']}"
+        filters = dict(room.get("discover_filters") or {"include_adult": "false"})
+        
+        if movie_filters.get(user_key) != filters:
+            movie_queues[user_key] = []
+            movie_pages[user_key] = 1
+            movie_filters[user_key] = filters
 
-        if q:
-            return jsonify(q.pop(0))
+        queue = movie_queues.get(user_key, [])
+        page = movie_pages.get(user_key, 1)
+
+        if len(queue) < 5:
+            params = dict(filters)
+            params["page"] = page
+            batch = tmdb.fetch_movie_list(params)
+            queue.extend(batch)
+            page += 1
+            if page > 500:
+                page = 1
+            movie_queues[user_key] = queue
+            movie_pages[user_key] = page
+
+        if queue:
+            movie = queue.pop(0)
+            movie_queues[user_key] = queue
+            return jsonify(movie)
         return jsonify({"error": "No movies available"}), 404
 
-    filters: dict = {}
+    # For anonymous users
+    if not session.get("anon_id"):
+        session["anon_id"] = secrets.token_urlsafe(16)
+    user_key = f"anon_{session['anon_id']}"
+    
+    filters = {}
     if request.args.get("isAdult") == "yes":
         filters["include_adult"] = "true"
     elif request.args.get("isAdult") == "no":
@@ -266,64 +287,30 @@ def get_next_movie():
         filters["with_genres"] = request.args.get("genre")
     if request.args.get("lang"):
         filters["with_original_language"] = request.args.get("lang")
-    filters["page"] = page
 
-    if len(MOVIE_QUEUE) < 5:
-        MOVIE_QUEUE.append(tmdb.fetch_movie_list(filters))
+    if movie_filters.get(user_key) != filters:
+        movie_queues[user_key] = []
+        movie_pages[user_key] = 1
+        movie_filters[user_key] = filters
+
+    queue = movie_queues.get(user_key, [])
+    page = movie_pages.get(user_key, 1)
+
+    if len(queue) < 5:
+        filters["page"] = page
+        batch = tmdb.fetch_movie_list(filters)
+        queue.extend(batch)
         page += 1
         if page > 500:
             page = 1
+        movie_queues[user_key] = queue
+        movie_pages[user_key] = page
 
-    if MOVIE_QUEUE:
-        return jsonify(MOVIE_QUEUE.pop(0))
+    if queue:
+        movie = queue.pop(0)
+        movie_queues[user_key] = queue
+        return jsonify(movie)
     return jsonify({"error": "No movies available"}), 404
-
-
-@app.route("/api/vote", methods=["POST"])
-def handle_vote():
-    data = request.json or {}
-    movie_id = data.get("id")
-    vote_type = data.get("vote")
-
-    if vote_type not in ("like", "dislike"):
-        return jsonify({"error": "vote must be like or dislike"}), 400
-
-    room_code = session.get("room_code")
-    if room_code:
-        ensure_participant_id()
-        code = room_store.normalize_code(room_code)
-        if room_store.get_room(code) is None:
-            return jsonify({"error": "room not found"}), 404
-        pid = session["participant_id"]
-        room_store.record_swipe(code, pid, movie_id, vote_type)
-        bucket = room_store.get_participant_swipes(code, pid) or {
-            "likes": [],
-            "dislikes": [],
-        }
-        return jsonify(
-            {
-                "message": "Vote received",
-                "liked_movies": bucket["likes"],
-                "disliked_movies": bucket["dislikes"],
-                "in_room": True,
-            }
-        )
-
-    if vote_type == "like":
-        LIKED_MOVIE.append(movie_id)
-    else:
-        DISLIKED_MOVIE.append(movie_id)
-
-    return jsonify(
-        {
-            "message": "Vote received",
-            "liked_movies": LIKED_MOVIE,
-            "disliked_movies": DISLIKED_MOVIE,
-            "in_room": False,
-        }
-    )
-
-
 
 
 if __name__ == '__main__':
