@@ -1,5 +1,6 @@
 import os
 import secrets
+import socket
 from dotenv import load_dotenv
 from flask import Flask, jsonify, redirect, render_template, request, session, url_for
 
@@ -25,6 +26,50 @@ def ensure_participant_id():
     """Stable per-browser id for attributing swipes in group sessions."""
     if not session.get("participant_id"):
         session["participant_id"] = secrets.token_urlsafe(16)
+
+
+def _lan_ipv4_for_sharing() -> str | None:
+    """Best-effort local IPv4 for URLs when the app is opened via localhost (QR / phones)."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+        finally:
+            s.close()
+        if ip and not ip.startswith("127."):
+            return ip
+    except OSError:
+        pass
+    return None
+
+
+def _host_port_suffix(http_host: str) -> str:
+    """Return ':port' from Host header, or ''. Handles [IPv6]:port and IPv4:port."""
+    if http_host.startswith("["):
+        end = http_host.find("]")
+        if end != -1 and end + 1 < len(http_host) and http_host[end + 1] == ":":
+            return http_host[end + 1 :]
+        return ""
+    if ":" in http_host:
+        return ":" + http_host.rsplit(":", 1)[-1]
+    return ""
+
+
+def invite_link_abs(code: str) -> str:
+    """Full /join/<code> URL for guests (QR, copy link). Uses INVITE_BASE_URL if set."""
+    code = room_store.normalize_code(code)
+    path = url_for("join_with_link", code=code, _external=False)
+    base = (os.environ.get("INVITE_BASE_URL") or os.environ.get("PUBLIC_BASE_URL") or "").strip().rstrip("/")
+    if base:
+        return f"{base}{path}"
+    host = (request.host or "").lower()
+    if "localhost" in host or "127.0.0.1" in host or "::1" in host:
+        lan = _lan_ipv4_for_sharing()
+        if lan:
+            port_suffix = _host_port_suffix(request.host or "")
+            return f"{request.scheme}://{lan}{port_suffix}{path}"
+    return url_for("join_with_link", code=code, _external=True)
 
 
 def parse_host_discover_payload() -> dict[str, str]:
@@ -107,7 +152,7 @@ def api_create_room():
             "code": code,
             "play_url": url_for("start", _external=False),
             "room_url": url_for("room_lobby", code=code, _external=False),
-            "invite_url": url_for("join_with_link", code=code, _external=True),
+            "invite_url": invite_link_abs(code),
         }
     )
 
@@ -155,7 +200,7 @@ def room_lobby(code):
     role = session.get("role")
     host_token = session.get("host_token")
     is_host = role == "host" and host_token == room["host_token"]
-    invite_url = url_for("join_with_link", code=code, _external=True)
+    invite_url = invite_link_abs(code)
     return render_template(
         "room.html",
         code=code,
@@ -313,5 +358,8 @@ def get_next_movie():
     return jsonify({"error": "No movies available"}), 404
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    # Listen on all interfaces so phones on the same LAN can load invite URLs (QR).
+    host = os.environ.get("FLASK_RUN_HOST", "0.0.0.0")
+    port = int(os.environ.get("FLASK_RUN_PORT", "5000"))
+    app.run(debug=True, host=host, port=port)
