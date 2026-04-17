@@ -115,6 +115,20 @@ async function getMovie(button){
         pastMovie = JSON.stringify(movie, null, 2);
         //console.log("Storing Movie" + pastMovie);
         frontCont.appendChild(newCard);
+
+        const titleYear = document.createElement("div");
+        titleYear.classList.add("title-year-row");
+
+        const title = document.createElement("span");
+        title.innerHTML = "Title <br>" + movie["title"];
+
+        const year = document.createElement("span");
+        year.innerHTML = "Year <br>" + movie['release_date'];
+
+        titleYear.appendChild(title);
+        titleYear.appendChild(year);
+
+        frontCont.appendChild(titleYear);
         
         // check the genre of the movie
         genresString = [];
