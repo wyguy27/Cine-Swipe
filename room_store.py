@@ -126,3 +126,19 @@ def get_all_swipes(code: str) -> dict[str, dict[str, list[int]]] | None:
             "dislikes": list(bucket.get("dislikes", [])),
         }
     return out
+
+
+def add_swipe(code: str, participant_id: str, movie_id: int, action: str):
+    """Record a like/dislike for a participant in the room."""
+    room = rooms.get(code)
+    if room:
+        swipes = room.setdefault("swipes", {})
+        participant_swipes = swipes.setdefault(participant_id, {})
+        participant_swipes[movie_id] = action
+
+def get_all_swipes(code: str) -> dict:
+    """Return all swipes: {participant_id: {movie_id: 'like'/'dislike'}}"""
+    room = rooms.get(code)
+    if room:
+        return room.get("swipes", {})
+    return {}
