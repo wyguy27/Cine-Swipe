@@ -1,145 +1,155 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <link rel="stylesheet" href="../static/style.css">
+    <title>Cine-Swipe</title>
+</head>
+<body>
     <div class="container">
         <div class="navbar">
-            <nav> <a href="/">
-                <img class="icon" src="../static/icons/home.png"/>
-            </a>
-            <a href="{{url_for('about')}}">
-                        <img class="icon" src="{{url_for('static', filename='icons/aboutus.png')}}" alt="About Us"/>
-            </a>
-        <head>
+            <nav>
+                <a href="/">
+                    <img class="icon" src="../static/icons/home.png"/>
+                </a>
+                <a href="{{ url_for('about') }}">
+                    <img class="icon" src="{{ url_for('static', filename='icons/aboutus.png') }}" alt="About Us"/>
+                </a>
+            </nav>
         </div>
-            <link rel="stylesheet" href="../static/style.css">
-            <title>Cine-Swipe</title>
-        </head>
-        <body>
-            <div class="tags-container" id="tagsContainer">
-                <div class="tags-rating" id="tagsRating"></div>
-                <div class="tags-votes" id="tagsVotes"></div>
-                <div class="tags-genres" id="tagsGenres"></div>
-            </div>
-            <div class="image-container" id="imageContainer">
-                <div class="image-inner" id="imageInner"> </div>
-            </div>
-            <div class="button-container">
-                <button class="button-dislike" onclick="getMovie(this)" id="dislike">NO</button>
-                <button  class="button-like" onclick="getMovie(this)" id="like">YES</button>
-                
-            </div>
-        </body>
+        <div class="tags-container" id="tagsContainer">
+            <div class="tags-rating" id="tagsRating"></div>
+            <div class="tags-votes" id="tagsVotes"></div>
+            <div class="tags-genres" id="tagsGenres"></div>
+        </div>
+        <div class="image-container" id="imageContainer">
+            <div class="image-inner" id="imageInner"> </div>
+        </div>
+        <div class="button-container">
+            <button class="button-dislike" onclick="getMovie(this)" id="dislike" type="button">NO</button>
+            <button class="button-like" onclick="getMovie(this)" id="like" type="button">YES</button>
+        </div>
     </div>
-    
-</html>
 
 <script>
+    const ANIM_MS = 280;
     const card = document.querySelector(".image-inner");
     card.addEventListener("click", function (e) {
         card.classList.toggle('is-flipped');
     });
 
-    var pastMovie = "";
-async function getMovie(button){
-    
-    
-    if (button != null) {
-        if (pastMovie === "") return;
+    /** Loaded once; genre names for tags + back of card. */
+    const genresPromise = fetch("/api/genres").then(function (r) { return r.json(); });
 
-        //console.log(typeof pastMovie);
-        const card = document.getElementById("imageInner");
-        const pastMovieJSON = JSON.parse(pastMovie);
-        pastMovieJSON["vote"] = button.id;        
-        const response = await Promise.all([
-            fetch("api/vote", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pastMovieJSON)
-            }),
-            new Promise(r => {
-                const isFlipped = card.classList.contains('is-flipped');
-                const flipY = isFlipped ? "rotateY(180deg)" : "";
+    /** Next movie JSON (started after each successful render). */
+    let nextMoviePromise = null;
 
-                card.style.transition = "transform 0.4s ease, opacity 0.4s ease";
-                card.style.transform = `translateX(${button.id === "like" ? 1000 : -1000}px) rotate(${button.id === "like" ? 45 : -45}deg) ${flipY}`;
-                card.style.opacity = 0;
-                setTimeout(r, 400);
-            })
-        ]);
-        
-        card.innerHTML = "";
-        card.style.cssText = "";
-        card.classList.remove('is-flipped');
-
-        document.getElementById("tagsRating").innerHTML = "";
-        document.getElementById("tagsVotes").innerHTML = "";
-        document.getElementById("tagsGenres").innerHTML = "";   
-
+    function prefetchNextMovie() {
+        nextMoviePromise = fetch("/api/get-next-movie").then(function (r) { return r.json(); });
     }
 
-    const [_, response] = await Promise.all([
-        new Promise(r => setTimeout(r, 400)),
-        fetch("/api/get-next-movie")
-    ]);
-    const movie = await response.json();
+    var pastMovie = "";
 
-    if(!("error" in movie)){
+    function genreNamesForMovie(movie, genres) {
+        var ids = movie["genre_ids"] || [];
+        var names = [];
+        for (var i = 0; i < genres.length; i++) {
+            if (ids.includes(genres[i]["id"])) {
+                names.push(" " + genres[i]["name"]);
+            }
+        }
+        return names;
+    }
+
+    async function getMovie(button) {
+        if (button != null) {
+            if (pastMovie === "") return;
+
+            const cardEl = document.getElementById("imageInner");
+            const pastMovieJSON = JSON.parse(pastMovie);
+            pastMovieJSON["vote"] = button.id;
+            await Promise.all([
+                fetch("/api/vote", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(pastMovieJSON)
+                }).catch(function () {}),
+                new Promise(function (resolve) {
+                    const isFlipped = cardEl.classList.contains("is-flipped");
+                    const flipY = isFlipped ? "rotateY(180deg)" : "";
+                    cardEl.style.transition = "transform " + ANIM_MS / 1000 + "s ease, opacity " + ANIM_MS / 1000 + "s ease";
+                    cardEl.style.transform = "translateX(" + (button.id === "like" ? 1000 : -1000) + "px) rotate(" + (button.id === "like" ? 45 : -45) + "deg) " + flipY;
+                    cardEl.style.opacity = 0;
+                    setTimeout(resolve, ANIM_MS);
+                })
+            ]);
+
+            cardEl.innerHTML = "";
+            cardEl.style.cssText = "";
+            cardEl.classList.remove("is-flipped");
+
+            document.getElementById("tagsRating").innerHTML = "";
+            document.getElementById("tagsVotes").innerHTML = "";
+            document.getElementById("tagsGenres").innerHTML = "";
+        }
+
+        var movie;
+        var genres;
+        if (nextMoviePromise) {
+            var pair = await Promise.all([nextMoviePromise, genresPromise]);
+            movie = pair[0];
+            genres = pair[1];
+            nextMoviePromise = null;
+        } else {
+            var pair2 = await Promise.all([
+                fetch("/api/get-next-movie").then(function (r) { return r.json(); }),
+                genresPromise
+            ]);
+            movie = pair2[0];
+            genres = pair2[1];
+        }
+
+        if ("error" in movie) {
+            movie = await fetch("/api/get-next-movie").then(function (r) { return r.json(); });
+        }
+        if ("error" in movie) {
+            return;
+        }
+
         const cardContainer = document.getElementById("imageInner");
+        const genresString = genreNamesForMovie(movie, genres);
 
-        const frontCont = document.createElement('div');
-        frontCont.classList.add('image_face', 'image_face--front');
+        const frontCont = document.createElement("div");
+        frontCont.classList.add("image_face", "image_face--front");
 
-        const imageContent = document.createElement('div');
-        imageContent.classList.add('image_content');
+        const backCont = document.createElement("div");
+        backCont.classList.add("image_face", "image_face--back");
 
-        const backCont = document.createElement('div');
-        backCont.classList.add('image_face', 'image_face--back');
-
-        // creating card header
-        const cardHeader = document.createElement('div');
-        cardHeader.classList.add('image_header')
+        const cardHeader = document.createElement("div");
+        cardHeader.classList.add("image_header");
         const cardHeader_title = document.createElement("h2");
         cardHeader_title.textContent = movie["title"];
         cardHeader.appendChild(cardHeader_title);
-        backCont.appendChild(cardHeader); 
+        backCont.appendChild(cardHeader);
 
-        frontCont.innerHTML = "";
-        const textContainer = document.createElement('div');
-        textContainer.classList.add('image_body');
-        textContainer.innerHTML = "";
+        const textContainer = document.createElement("div");
+        textContainer.classList.add("image_body");
 
-        // creates poster image
         const newCard = document.createElement("img");
         newCard.id = "image";
         newCard.className = "image";
         newCard.src = movie["poster_path"];
         pastMovie = JSON.stringify(movie, null, 2);
-        console.log("Storing Movie" + pastMovie);
+
         frontCont.appendChild(newCard);
-        const movieTitle = document.createElement('div');
+        const movieTitle = document.createElement("div");
         movieTitle.innerHTML = movie["title"];
         frontCont.appendChild(movieTitle);
 
-        
-        // check the genre of the movie
-        genresString = [];
-        movieGenre = movie["genre_ids"];
-        console.log(movieGenre);
-        const genres = await fetch("/api/genres").then(function (response) { return response.json(); });
-        console.log(genres);
-        for (const genre of genres){
-            console.log("genre: " + genre["id"]);
-            if (movieGenre.includes(genre["id"])){
-                genresString.push(" " + genre["name"]);
-            }
-        }
-
-        // creates text info
         const textInfo = document.createElement("p");
         textInfo.innerHTML = "Rating: " + movie["vote_average"] + "/10 <br><br> Votes: " + movie["vote_count"] + "<br><br> Genres: " + genresString + "<br><br> Description: " + movie["overview"];
         textContainer.appendChild(textInfo);
-        backCont.appendChild(textContainer); 
+        backCont.appendChild(textContainer);
 
-        // creates tags
         const tagsRating = document.getElementById("tagsRating");
         const tagsVotes = document.getElementById("tagsVotes");
         const tagsGenres = document.getElementById("tagsGenres");
@@ -155,12 +165,14 @@ async function getMovie(button){
         const tagGenres = document.createElement("p");
         tagGenres.innerHTML = "Genres: " + genresString;
         tagsGenres.appendChild(tagGenres);
- 
-        cardContainer.appendChild(frontCont);  
-        cardContainer.appendChild(backCont);   
 
+        cardContainer.appendChild(frontCont);
+        cardContainer.appendChild(backCont);
+
+        prefetchNextMovie();
     }
-}
 
-window.onload = getMovie(null);
+    window.onload = getMovie(null);
 </script>
+</body>
+</html>
