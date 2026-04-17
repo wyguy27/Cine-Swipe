@@ -139,12 +139,42 @@
         newCard.className = "image";
         newCard.src = movie["poster_path"];
         pastMovie = JSON.stringify(movie, null, 2);
+        //console.log("Storing Movie" + pastMovie);
 
         frontCont.appendChild(newCard);
         const movieTitle = document.createElement("div");
         movieTitle.innerHTML = movie["title"];
         frontCont.appendChild(movieTitle);
 
+
+        const titleYear = document.createElement("div");
+        titleYear.classList.add("title-year-row");
+
+        const title = document.createElement("span");
+        title.innerHTML = "Title <br>" + movie["title"];
+
+        const year = document.createElement("span");
+        year.innerHTML = "Year <br>" + movie['release_date'];
+
+        titleYear.appendChild(title);
+        titleYear.appendChild(year);
+
+        frontCont.appendChild(titleYear);
+        
+        // check the genre of the movie
+        genresString = [];
+        movieGenre = movie["genre_ids"];
+        //console.log(movieGenre);
+        const genres = await fetch("/api/genres").then(function (response) { return response.json(); });
+        //console.log(genres);
+        for (const genre of genres){
+            //console.log("genre: " + genre["id"]);
+            if (movieGenre.includes(genre["id"])){
+                genresString.push(" " + genre["name"]);
+            }
+        }
+
+        // creates text info
         const textInfo = document.createElement("p");
         textInfo.innerHTML = "Rating: " + movie["vote_average"] + "/10 <br><br> Votes: " + movie["vote_count"] + "<br><br> Genres: " + genresString + "<br><br> Description: " + movie["overview"];
         textContainer.appendChild(textInfo);
