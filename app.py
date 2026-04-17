@@ -46,6 +46,25 @@ def parse_host_discover_payload() -> dict[str, str]:
     lang = data.get("language")
     if isinstance(lang, str) and lang.strip() and len(lang.strip()) <= 12:
         out["with_original_language"] = lang.strip()
+
+    rm = data.get("rating_min")
+    rmx = data.get("rating_max")
+    try:
+        lo = float(rm) if rm is not None else None
+        hi = float(rmx) if rmx is not None else None
+    except (TypeError, ValueError):
+        lo, hi = None, None
+    if (
+        lo is not None
+        and hi is not None
+        and 0 <= lo <= 10
+        and 0 <= hi <= 10
+        and lo < hi
+    ):
+        # TMDB discover: average vote (0–10) must fall within [lo, hi]
+        out["vote_average.gte"] = str(lo)
+        out["vote_average.lte"] = str(hi)
+
     return out
 
 

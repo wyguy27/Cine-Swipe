@@ -11,6 +11,11 @@
             <title>Cine-Swipe</title>
         </head>
         <body>
+            <div class="tags-container" id="tagsContainer">
+                <div class="tags-rating" id="tagsRating"></div>
+                <div class="tags-votes" id="tagsVotes"></div>
+                <div class="tags-genres" id="tagsGenres"></div>
+            </div>
             <div class="image-container" id="imageContainer">
                 <div class="image-inner" id="imageInner"> </div>
             </div>
@@ -62,6 +67,10 @@ async function getMovie(button){
         card.style.cssText = "";
         card.classList.remove('is-flipped');
 
+        document.getElementById("tagsRating").innerHTML = "";
+        document.getElementById("tagsVotes").innerHTML = "";
+        document.getElementById("tagsGenres").innerHTML = "";   
+
     }
 
     const [_, response] = await Promise.all([
@@ -103,6 +112,10 @@ async function getMovie(button){
         pastMovie = JSON.stringify(movie, null, 2);
         console.log("Storing Movie" + pastMovie);
         frontCont.appendChild(newCard);
+        const movieTitle = document.createElement('div');
+        movieTitle.innerHTML = movie["title"];
+        frontCont.appendChild(movieTitle);
+
         
         // check the genre of the movie
         genresString = [];
@@ -122,6 +135,23 @@ async function getMovie(button){
         textInfo.innerHTML = "Rating: " + movie["vote_average"] + "/10 <br><br> Votes: " + movie["vote_count"] + "<br><br> Genres: " + genresString + "<br><br> Description: " + movie["overview"];
         textContainer.appendChild(textInfo);
         backCont.appendChild(textContainer); 
+
+        // creates tags
+        const tagsRating = document.getElementById("tagsRating");
+        const tagsVotes = document.getElementById("tagsVotes");
+        const tagsGenres = document.getElementById("tagsGenres");
+
+        const tagRating = document.createElement("p");
+        tagRating.innerHTML = "Rating: " + movie["vote_average"] + "/10";
+        tagsRating.appendChild(tagRating);
+
+        const tagVotes = document.createElement("p");
+        tagVotes.innerHTML = "Votes: " + movie["vote_count"];
+        tagsVotes.appendChild(tagVotes);
+
+        const tagGenres = document.createElement("p");
+        tagGenres.innerHTML = "Genres: " + genresString;
+        tagsGenres.appendChild(tagGenres);
  
         cardContainer.appendChild(frontCont);  
         cardContainer.appendChild(backCont);   

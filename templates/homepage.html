@@ -54,6 +54,148 @@
             margin: 0.5rem 0 0;
             font-size: 0.9rem;
         }
+        .genre-field {
+            margin: 0.75rem 0;
+            text-align: left;
+        }
+        .genre-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+        #genreSelect {
+            width: 100%;
+            max-width: 100%;
+            min-height: 10rem;
+            padding: 0.35rem;
+            font: inherit;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        #langSelect {
+            width: 100%;
+            max-width: 100%;
+            min-height: 10rem;
+            padding: 0.35rem;
+            font: inherit;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        .genre-hint {
+            font-size: 0.75rem;
+            color: #555;
+            margin: 0.35rem 0 0;
+        }
+        .genre-hint kbd {
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            background: #f5f5f5;
+            font-size: 0.7rem;
+        }
+        .rating-range {
+            margin: 0.75rem 0;
+            text-align: left;
+        }
+        .rating-range > .rating-label {
+            display: block;
+            font-weight: 600;
+            margin: 0 0 0.35rem;
+        }
+        /* One track, two thumbs, highlighted window between */
+        .dual-range {
+            position: relative;
+            height: 44px;
+            width: 100%;
+            margin: 0.25rem 0 0;
+        }
+        .dual-range-track {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 8px;
+            background: #ddd;
+            border-radius: 4px;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .dual-range-window {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 8px;
+            background: rgb(180, 150, 85);
+            border-radius: 4px;
+            z-index: 1;
+            left: 0%;
+            width: 100%;
+            pointer-events: none;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+        }
+        .dual-range input[type="range"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 44px;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            -webkit-appearance: none;
+            appearance: none;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .dual-range input[type="range"]#ratingMin {
+            z-index: 3;
+        }
+        .dual-range input[type="range"]#ratingMax {
+            z-index: 2;
+        }
+        .dual-range input[type="range"]::-webkit-slider-runnable-track {
+            -webkit-appearance: none;
+            height: 8px;
+            background: transparent;
+            border: none;
+        }
+        .dual-range input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            pointer-events: auto;
+            width: 20px;
+            height: 20px;
+            margin-top: -6px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+            cursor: grab;
+        }
+        .dual-range input[type="range"]::-moz-range-track {
+            height: 8px;
+            background: transparent;
+            border: none;
+        }
+        .dual-range input[type="range"]::-moz-range-thumb {
+            pointer-events: auto;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #333;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+            cursor: grab;
+        }
+        #ratingIntervalDisplay {
+            text-align: center;
+            margin: 0.6rem 0 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #222;
+        }
     </style>
 </head>
 <body>
@@ -88,10 +230,18 @@
 
                     <label for="isAdult">Adult?</label>
                     <input type="checkbox" id="isAdult" name="isAdult" value="yes">
-                    
-                    <div id="genres">Genres: </div>
 
-                    <div id="lang">Languages: </div>
+                    <div class="genre-field">
+                        <label for="genreSelect">Genres</label>
+                        <select id="genreSelect" name="genres" multiple size="10" aria-describedby="genreHint"></select>
+                        <p id="genreHint" class="genre-hint">Hold <kbd>Ctrl</kbd> (Windows) or <kbd>⌘</kbd> (Mac) and click to select more than one.</p>
+                    </div>
+
+                    <div class="lang-field"> 
+                        <label for="langSelect">Languages</label>
+                        <select id="langSelect" name="languages" multiple size="10" aria-describedby="languageHint"></select>
+                        <p id="genreHint" class="genre-hint">Hold <kbd>Ctrl</kbd> (Windows) or <kbd>⌘</kbd> (Mac) and click to select more than one.</p>                        
+                    </div>
 
                     <label for="start">Date Released from:</label>
                     <input type="date" id="start" name="startDate"
@@ -103,10 +253,16 @@
                         value="2025-01-01"
                         min="2025-01-01" max="2025-12-31">
 
-                    <label for="rating">Rating (1.0 to 10.0):</label>
-                    <input type="range" id="rating" name="rating" min="1.0" max="10.0" step="0.1">
-                    <output id="ratingValue">5.0</output>
-
+                    <div class="rating-range">
+                        <span class="rating-label">Rating window (0–10)</span>
+                        <div class="dual-range" id="dualRange">
+                            <div class="dual-range-track" aria-hidden="true"></div>
+                            <div class="dual-range-window" id="ratingWindow" aria-hidden="true"></div>
+                            <input type="range" id="ratingMin" name="ratingMin" min="0" max="10" step="0.1" value="0" aria-label="Minimum rating">
+                            <input type="range" id="ratingMax" name="ratingMax" min="0" max="10" step="0.1" value="10" aria-label="Maximum rating">
+                        </div>
+                        <p id="ratingIntervalDisplay" aria-live="polite">0.0 – 10.0</p>
+                    </div>
 
                     <input type="submit" value="Submit" >
                 </form>
@@ -118,149 +274,161 @@
     </div>
 
 <script>
-    window.onload = () =>{
-        populateGenres();
-        // populateLang(); //still need function to populate languages
-    }
-
-    function start(){
+    function start() {
         window.location.href = "/start";
     }
 
-    function select(id){
+    function select(id) {
         var opt = document.getElementById(id);
-        opt.select= !opt.select;
+        if (opt) opt.select = !opt.select;
     }
 
-    async function populateGenres(){
-        const genres = await fetch('/api/genres').then(response => response.json());
-        console.log(genres);
-        const genreList = document.getElementById('genres')
-        genres.forEach(genre => {
-            const input = document.createElement('input');
-            input.type = "checkbox";
-            input.id = genre.id;
-            input.value = genre.name;
-            
-
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.textContent = genre.name;
-
-            genreList.appendChild(input);
-            genreList.appendChild(label);
+    async function populateGenres() {
+        const genres = await fetch("/api/genres").then(function (r) { return r.json(); });
+        const sel = document.getElementById("genreSelect");
+        if (!sel) return;
+        sel.innerHTML = "";
+        genres.forEach(function (genre) {
+            const opt = document.createElement("option");
+            opt.value = String(genre.id);
+            opt.textContent = genre.name;
+            sel.appendChild(opt);
         });
     }
 
-    async function populateLang(){
-        const lang = await fetch('/api/languages').then(response => response.json());
-        console.log(lang);
-        const langList = document.getElementById('lang')
-        genres.forEach(genre => {
-            const input = document.createElement('input');
-            input.type = "checkbox";
-            input.id = lang.id;
-            input.value = lang.name;
-            
-
-            const label = document.createElement('label');
-            label.htmlFor = input.id;
-            label.textContent = lang.name;
-
-            const container = document.createElement('div');
-
-            container.appendChild(input);
-            container.appendChild(label);
-
-            langList.appendChild(container);
+    async function populateLang() {
+        const langs = await fetch("/api/languages").then(function (r) { return r.json(); });
+        const langList = document.getElementById("langSelect");
+        if (!langList) return;
+        langs.forEach(function (row, idx) {
+            const input = document.createElement("option");
+            input.value = "lang-" + (row.iso_639_1 || row.code || "i" + idx);
+            input.textContent = row.english_name || row.name || "";
+            langList.appendChild(input);
         });
     }
 
-    // Get the elements
-    const rangeInput = document.getElementById("rating");
-    const valueDisplay = document.getElementById("ratingValue");
+    window.onload = function () {
+        populateGenres();
+        populateLang();
+    };
 
-    // Add an event listener to update the display as the slider moves
-    rangeInput.addEventListener("input", function() {
-        valueDisplay.textContent = this.value;
+    document.getElementById("prefsForm").addEventListener("submit", function (e) {
+        e.preventDefault();
     });
 
-    function showForm(){
-        var form = document.getElementById('prefsForm');
+    document.addEventListener("DOMContentLoaded", function () {
+        const RATING_GAP = 0.1;
 
-        if(form.style.display === "flex"){
-            form.style.display = "none";
-        }
-        else {
-            form.style.display = "flex";
-        }
-    }
-
-</script>
-    <script>
-        document.getElementById("createHost").addEventListener("click", async function () {
-            const err = document.getElementById("hostErr");
-            err.hidden = true;
-            const includeAdult = document.getElementById("isAdult").checked;
-            const genreIds = [];
-            document.querySelectorAll("#genres input[type=\"checkbox\"]:checked").forEach(function (cb) {
-                const id = parseInt(cb.id, 10);
-                if (!isNaN(id)) genreIds.push(id);
-            });
-            try {
-                const r = await fetch("{{ url_for('api_create_room') }}", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        include_adult: includeAdult,
-                        genre_ids: genreIds
-                    })
-                });
-                if (!r.ok) throw new Error("Could not create room");
-                const d = await r.json();
-                window.location.href = d.room_url;
-            } catch (e) {
-                err.textContent = "Could not create a session. Try again.";
-                err.hidden = false;
+        function updateRatingIntervalText() {
+            const minEl = document.getElementById("ratingMin");
+            const maxEl = document.getElementById("ratingMax");
+            const out = document.getElementById("ratingIntervalDisplay");
+            const win = document.getElementById("ratingWindow");
+            if (!minEl || !maxEl || !out) return;
+            const lo = parseFloat(minEl.value);
+            const hi = parseFloat(maxEl.value);
+            out.textContent = lo.toFixed(1) + " – " + hi.toFixed(1);
+            if (win) {
+                win.style.left = (lo / 10 * 100) + "%";
+                win.style.width = ((hi - lo) / 10 * 100) + "%";
             }
-        });
-    </script>
-    <script>
-        document.getElementById("prefsForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-        });
-
-        window.onload = function () {
-            populateGenres();
-        };
-
-        function start() {
-            window.location.href = "/start";
+            /* Whichever thumb is closer to its track end sits on top so both stay grabbable when close */
+            const distMinFromLeft = lo;
+            const distMaxFromRight = 10 - hi;
+            if (distMinFromLeft <= distMaxFromRight) {
+                minEl.style.zIndex = "3";
+                maxEl.style.zIndex = "2";
+            } else {
+                minEl.style.zIndex = "2";
+                maxEl.style.zIndex = "3";
+            }
         }
 
-        function select(id) {
-            var opt = document.getElementById(id);
-            opt.select = !opt.select;
+        function syncRatingSliders(changed) {
+            const minEl = document.getElementById("ratingMin");
+            const maxEl = document.getElementById("ratingMax");
+            if (!minEl || !maxEl) return;
+            let lo = parseFloat(minEl.value);
+            let hi = parseFloat(maxEl.value);
+
+            if (changed === "min") {
+                if (lo >= hi) {
+                    lo = Math.round((hi - RATING_GAP) * 10) / 10;
+                    if (lo < 0) {
+                        lo = 0;
+                        hi = Math.min(RATING_GAP, 10);
+                        maxEl.value = String(hi);
+                    }
+                    minEl.value = String(lo);
+                }
+            } else if (changed === "max") {
+                if (hi <= lo) {
+                    hi = Math.round((lo + RATING_GAP) * 10) / 10;
+                    if (hi > 10) {
+                        hi = 10;
+                        lo = Math.round((hi - RATING_GAP) * 10) / 10;
+                        minEl.value = String(lo);
+                    }
+                    maxEl.value = String(hi);
+                }
+            }
+            updateRatingIntervalText();
         }
 
-        async function populateGenres() {
-            const genres = await fetch("/api/genres").then(function (response) { return response.json(); });
-            console.log(genres);
-            const genreList = document.getElementById("genres");
-            genres.forEach(function (genre) {
-                const input = document.createElement("input");
-                input.type = "checkbox";
-                input.id = String(genre.id);
-                input.value = genre.name;
-
-                const label = document.createElement("label");
-                label.htmlFor = input.id;
-                label.textContent = genre.name;
-
-                genreList.appendChild(input);
-                genreList.appendChild(label);
+        const ratingMin = document.getElementById("ratingMin");
+        const ratingMax = document.getElementById("ratingMax");
+        if (ratingMin && ratingMax) {
+            ratingMin.addEventListener("input", function () {
+                syncRatingSliders("min");
             });
+            ratingMax.addEventListener("input", function () {
+                syncRatingSliders("max");
+            });
+            updateRatingIntervalText();
         }
-    </script>
+    });
+
+    document.getElementById("createHost").addEventListener("click", async function () {
+        const err = document.getElementById("hostErr");
+        err.hidden = true;
+        const includeAdult = document.getElementById("isAdult").checked;
+        const genreIds = [];
+        const sel = document.getElementById("genreSelect");
+        if (sel) {
+            for (let i = 0; i < sel.selectedOptions.length; i++) {
+                const id = parseInt(sel.selectedOptions[i].value, 10);
+                if (!isNaN(id)) genreIds.push(id);
+            }
+        }
+        try {
+            const rmEl = document.getElementById("ratingMin");
+            const rmxEl = document.getElementById("ratingMax");
+            const payload = {
+                include_adult: includeAdult,
+                genre_ids: genreIds
+            };
+            if (rmEl && rmxEl) {
+                const lo = parseFloat(rmEl.value);
+                const hi = parseFloat(rmxEl.value);
+                if (!isNaN(lo) && !isNaN(hi) && lo < hi) {
+                    payload.rating_min = lo;
+                    payload.rating_max = hi;
+                }
+            }
+            const r = await fetch("{{ url_for('api_create_room') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!r.ok) throw new Error("Could not create room");
+            const d = await r.json();
+            window.location.href = d.room_url;
+        } catch (e) {
+            err.textContent = "Could not create a session. Try again.";
+            err.hidden = false;
+        }
+    });
+</script>
 </body>
 </html>
