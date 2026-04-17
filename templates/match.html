@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <title>Cine-Swipe</title>
+    </head>
+    <body>
+        <div class="container">
+            <div class="navbar">
+                <nav>
+                    <a href="{{ url_for('home') }}">
+                        <img class="icon" src="{{ url_for('static', filename='icons/home.png') }}" alt="Home"/>
+                    </a>
+                    <a href="{{url_for('about')}}">
+                        <img class="icon" src="{{url_for('static', filename='icons/aboutus.png')}}" alt="About Us"/>
+                    </a>
+                </nav>
+            </div>
+            <div class="homescreen">
+                <h1 id="homepage-title">Match Found!</h1>
+                <div id="match">
+                    {{match}}
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        // window.onload = async function() {
+        //     //const moviePoster = await fetch()
+        //     const moviePoster = {{ matches }};
+        //     document.getElementById("match").appendChild()
+        // }
+    </script>
+</html>
