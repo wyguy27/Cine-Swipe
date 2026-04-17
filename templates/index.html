@@ -113,7 +113,7 @@ async function getMovie(button){
         newCard.className = "image";
         newCard.src = movie["poster_path"];
         pastMovie = JSON.stringify(movie, null, 2);
-        console.log("Storing Movie" + pastMovie);
+        //console.log("Storing Movie" + pastMovie);
         frontCont.appendChild(newCard);
         const movieTitle = document.createElement('div');
         movieTitle.innerHTML = movie["title"];
@@ -123,11 +123,11 @@ async function getMovie(button){
         // check the genre of the movie
         genresString = [];
         movieGenre = movie["genre_ids"];
-        console.log(movieGenre);
+        //console.log(movieGenre);
         const genres = await fetch("/api/genres").then(function (response) { return response.json(); });
-        console.log(genres);
+        //console.log(genres);
         for (const genre of genres){
-            console.log("genre: " + genre["id"]);
+            //console.log("genre: " + genre["id"]);
             if (movieGenre.includes(genre["id"])){
                 genresString.push(" " + genre["name"]);
             }
