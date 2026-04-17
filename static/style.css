@@ -1,7 +1,7 @@
 html, body{
     padding: 0;
     margin: 0;
-    overflow: hidden;
+    overflow: scroll;
 }
 
 .image {
@@ -62,8 +62,8 @@ html, body{
 .image-container {
     margin: 20px 0px 20px;
     position : relative;
-    width: 400px;
-    height: 600px;
+    width: auto;
+    height: 60vh;
     display: flex;
     justify-content: center;
     align-items: center;
