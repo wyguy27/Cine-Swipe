@@ -60,7 +60,7 @@ html, body{
 
 
 .image-container {
-    margin: 20px 0px 20px;
+    margin: 10px 0px 20px;
     position : relative;
     width: auto;
     height: 60vh;
@@ -211,7 +211,7 @@ button {
     max-width: 50%;
 }
 
-#prefsForm {
+form {
     background: #fbeedb;
     height: 50vh;
     padding: 25px 30px;
@@ -331,8 +331,4 @@ input[type="submit"]:hover {
 #formDialog {
     background-color: transparent;
     border: transparent;
-}
-
-#homepage-title {
-    font-size: 100px;
 }
