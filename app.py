@@ -137,44 +137,58 @@ def start():
             return redirect(url_for("room_lobby", code=code))
     return render_template("index.html")
 
+
+# when a movie matches with the whole group
 @app.route("/match")
 def match():
     room_code = session.get("room_code")
     if not room_code:
-        return redirect(url_for("home"))  # Redirect if not in a room
-    
+        return redirect(url_for("home"))
+
     code = room_store.normalize_code(room_code)
     room = room_store.get_room(code)
     if room is None or not room.get("session_started", False):
-        return redirect(url_for("home"))  # Redirect if room invalid or swiping not started
-    
-    # Fetch all swipes for the room
+        return redirect(url_for("home"))
+
     swipes_summary = room_store.get_all_swipes(code) or {}
-    if not swipes_summary:
-        return render_template("match.html", matches=[], error="No swipes yet.")
-    
-    # Get list of participant IDs
     participants = list(swipes_summary.keys())
     if len(participants) < 2:
-        return render_template("match.html", matches=[], error="Need at least 2 participants for matches.")
+        return render_template("match.html", match=None, error="Need at least 2 participants for matches.")
+
+    matched_ids = [
+        movie_id
+        for movie_id in swipes_summary[participants[0]].keys()
+        if all(swipes_summary[p].get(movie_id) == "like" for p in participants)
+    ]
+
+    if not matched_ids:
+        return render_template("match.html", match=None, error="No matches found.")
+
+    match = tmdb.fetch_movie_details(matched_ids[0])
+    return render_template("match.html", match=match)
+
+
+# checks if there is a movie liked by every user
+@app.route("/api/rooms/<code>/has-match")
+def api_room_has_match(code):
+    code = room_store.normalize_code(code)
+    if session.get("room_code") != code:
+        return jsonify({"error": "forbidden"}), 403
+    room = room_store.get_room(code)
+    if room is None:
+        return jsonify({"error": "not_found"}), 404
     
-    # Find movie IDs liked by ALL participants
-    liked_by_all = set()
+    # Fetch all swipes
+    swipes_summary = room_store.get_all_swipes(code) or {}
+    participants = list(swipes_summary.keys())
+    if len(participants) < 2:
+        return jsonify({"has_match": False})
+    
+    # Check if any movie is liked by ALL participants
     for movie_id in swipes_summary[participants[0]].keys():
         if all(swipes_summary[p].get(movie_id) == "like" for p in participants):
-            liked_by_all.add(movie_id)
-
-        if not liked_by_all:
-            return render_template("match.html", matches=[], error="No matches found.")
-        
-    # Fetch movie details for matched IDs (assuming tmdb has a fetch_movie_details function)
-    matches = []
-    for movie_id in liked_by_all:
-        movie = tmdb.fetch_movie_details(movie_id)  # Implement this in tmdb_client if needed
-        if movie:
-            matches.append(movie)
-    
-    return render_template("match.html", matches=matches)
+            return jsonify({"has_match": True})
+    return jsonify({"has_match": False})
 
 
 @app.route("/api/rooms", methods=["POST"])
@@ -395,6 +409,40 @@ def get_next_movie():
         movie_queues[user_key] = queue
         return jsonify(movie)
     return jsonify({"error": "No movies available"}), 404
+
+
+@app.route("/api/vote", methods=["POST"])
+def vote_movie():
+    room_code = session.get("room_code")
+    if not room_code:
+        return jsonify({"error": "not_in_room"}), 403
+
+    code = room_store.normalize_code(room_code)
+    room = room_store.get_room(code)
+    if room is None:
+        return jsonify({"error": "room_not_found"}), 404
+
+    ensure_participant_id()
+    data = request.get_json(silent=True) or {}
+    try:
+        movie_id = int(data.get("movie_id"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "invalid_movie_id"}), 400
+
+    raw_vote = data.get("vote")
+    if isinstance(raw_vote, bool):
+        action = "like" if raw_vote else "dislike"
+    else:
+        vote_text = str(raw_vote).strip().lower()
+        if vote_text == "like":
+            action = "like"
+        elif vote_text == "dislike":
+            action = "dislike"
+        else:
+            return jsonify({"error": "invalid_vote"}), 400
+
+    room_store.add_swipe(code, session["participant_id"], movie_id, action)
+    return jsonify({"ok": True})
 
 
 if __name__ == "__main__":

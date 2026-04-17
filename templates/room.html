@@ -13,6 +13,8 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             max-width: 420px;
             text-align: center;
+            overflow: scroll;
+            margin: 50px;
         }
         .lobby-card h1 { margin-top: 0; font-size: 1.5rem; }
         .role-host { color: #1565c0; font-weight: 600; }
@@ -63,6 +65,7 @@
 </head>
 <body>
     <div class="container" style="justify-content: center;">
+        
         <div class="lobby-card" {% if error != 'not_found' %}id="lobbyCard" data-is-host="{{ 1 if is_host else 0 }}"{% endif %}>
             {% if error == 'not_found' %}
             <h1>Room not found</h1>
