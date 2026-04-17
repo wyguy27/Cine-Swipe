@@ -331,7 +331,7 @@ def get_next_movie():
         queue = movie_queues.get(user_key, [])
         page = movie_pages.get(user_key, 1)
 
-        if len(queue) < 5:
+        if len(queue) < 10:
             params = dict(filters)
             params["page"] = page
             batch = tmdb.fetch_movie_list(params)
@@ -371,7 +371,7 @@ def get_next_movie():
     queue = movie_queues.get(user_key, [])
     page = movie_pages.get(user_key, 1)
 
-    if len(queue) < 5:
+    if len(queue) < 10:
         filters["page"] = page
         batch = tmdb.fetch_movie_list(filters)
         queue.extend(batch)
