@@ -354,3 +354,7 @@ input[type="submit"]:hover {
     background-color: transparent;
     border: transparent;
 }
+
+#homepage-title{
+    font-size: 100px;
+}
