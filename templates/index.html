@@ -4,7 +4,10 @@
         <div class="navbar">
             <nav> <a href="/">
                 <img class="icon" src="../static/icons/home.png"/>
-            </a> <a href="about.html">About</a></nav>
+            </a>
+            <a href="{{url_for('about')}}">
+                        <img class="icon" src="{{url_for('static', filename='icons/aboutus.png')}}" alt="About Us"/>
+            </a>
         <head>
         </div>
             <link rel="stylesheet" href="../static/style.css">
