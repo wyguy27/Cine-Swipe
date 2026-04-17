@@ -168,29 +168,6 @@ def match():
     return render_template("match.html", match=match)
 
 
-# checks if there is a movie liked by every user
-@app.route("/api/rooms/<code>/has-match")
-def api_room_has_match(code):
-    code = room_store.normalize_code(code)
-    if session.get("room_code") != code:
-        return jsonify({"error": "forbidden"}), 403
-    room = room_store.get_room(code)
-    if room is None:
-        return jsonify({"error": "not_found"}), 404
-    
-    # Fetch all swipes
-    swipes_summary = room_store.get_all_swipes(code) or {}
-    participants = list(swipes_summary.keys())
-    if len(participants) < 2:
-        return jsonify({"has_match": False})
-    
-    # Check if any movie is liked by ALL participants
-    for movie_id in swipes_summary[participants[0]].keys():
-        if all(swipes_summary[p].get(movie_id) == "like" for p in participants):
-            return jsonify({"has_match": True})
-    return jsonify({"has_match": False})
-
-
 @app.route("/api/rooms", methods=["POST"])
 def api_create_room():
     discover = parse_host_discover_payload()
@@ -442,7 +419,18 @@ def vote_movie():
             return jsonify({"error": "invalid_vote"}), 400
 
     room_store.add_swipe(code, session["participant_id"], movie_id, action)
-    return jsonify({"ok": True})
+
+    # Check for match after voting
+    swipes_summary = room_store.get_all_swipes(code) or {}
+    participants = list(swipes_summary.keys())
+    has_match = False
+    if len(participants) >= 2:
+        for movie_id in swipes_summary[participants[0]].keys():
+            if all(swipes_summary[p].get(movie_id) == "like" for p in participants):
+                has_match = True
+                break
+
+    return jsonify({"ok": True, "has_match": has_match})
 
 
 if __name__ == "__main__":
