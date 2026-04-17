@@ -414,30 +414,36 @@ def get_next_movie():
 @app.route("/api/vote", methods=["POST"])
 def vote_movie():
     room_code = session.get("room_code")
-    if room_code:
-        code = room_store.normalize_code(room_code)
-        room = room_store.get_room(code)
-        if room is None:
-            return jsonify({"error": "No movies available"}), 404
+    if not room_code:
+        return jsonify({"error": "not_in_room"}), 403
 
-        ensure_participant_id()
-        user_key = f"room_{code}_{session['participant_id']}"
-        filters = dict(room.get("discover_filters") or {"include_adult": "false"})
+    code = room_store.normalize_code(room_code)
+    room = room_store.get_room(code)
+    if room is None:
+        return jsonify({"error": "room_not_found"}), 404
 
+    ensure_participant_id()
     data = request.get_json(silent=True) or {}
     try:
         movie_id = int(data.get("movie_id"))
     except (TypeError, ValueError):
         return jsonify({"error": "invalid_movie_id"}), 400
-    
+
     raw_vote = data.get("vote")
     if isinstance(raw_vote, bool):
         action = "like" if raw_vote else "dislike"
     else:
-        return jsonify({"error": "invalid_vote"}), 400
+        vote_text = str(raw_vote).strip().lower()
+        if vote_text == "like":
+            action = "like"
+        elif vote_text == "dislike":
+            action = "dislike"
+        else:
+            return jsonify({"error": "invalid_vote"}), 400
 
     room_store.add_swipe(code, session["participant_id"], movie_id, action)
     return jsonify({"ok": True})
+
 
 if __name__ == "__main__":
     # Listen on all interfaces so phones on the same LAN can load invite URLs (QR).
