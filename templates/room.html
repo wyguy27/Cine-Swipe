@@ -110,6 +110,7 @@
     {% if error != 'not_found' %}
     <script>
         const swipingStatusUrl = "{{ url_for('api_room_swiping_status', code=code) }}";
+        const winnerStatusUrl = "{{ url_for('api_winner_status', code=code) }}";
         const startSwipingApiUrl = "{{ url_for('api_start_swiping', code=code) }}";
         const startPlayUrl = "{{ url_for('start') }}";
         const isHost = document.getElementById("lobbyCard").dataset.isHost === "1";
@@ -175,12 +176,32 @@
         if (!isHost) {
             const poll = setInterval(async () => {
                 try {
+                    const wr = await fetch(winnerStatusUrl);
+                    if (wr.ok) {
+                        const wd = await wr.json();
+                        if (wd.has_winner && wd.winner_url) {
+                            clearInterval(poll);
+                            window.location.href = wd.winner_url;
+                            return;
+                        }
+                    }
                     const r = await fetch(swipingStatusUrl);
                     if (!r.ok) return;
                     const data = await r.json();
                     if (data.session_started) {
                         clearInterval(poll);
                         window.location.href = startPlayUrl;
+                    }
+                } catch (e) { /* ignore */ }
+            }, 1200);
+        } else {
+            setInterval(async () => {
+                try {
+                    const wr = await fetch(winnerStatusUrl);
+                    if (!wr.ok) return;
+                    const wd = await wr.json();
+                    if (wd.has_winner && wd.winner_url) {
+                        window.location.href = wd.winner_url;
                     }
                 } catch (e) { /* ignore */ }
             }, 1200);

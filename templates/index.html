@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" href="../static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Cine-Swipe</title>
 </head>
 <body>
     <div class="container">
         <div class="navbar">
             <nav>
-                <a href="/">
-                    <img class="icon" src="../static/icons/home.png"/>
+                <a href="{{ url_for('home') }}">
+                    <img class="icon" src="{{ url_for('static', filename='icons/home.png') }}" alt="Home"/>
                 </a>
                 <a href="{{ url_for('about') }}">
                     <img class="icon" src="{{ url_for('static', filename='icons/aboutus.png') }}" alt="About Us"/>
@@ -30,7 +30,9 @@
         </div>
     </div>
 
+<script type="application/json" id="cineSwipePageConfig">{{ {"room_code": room_code} | tojson }}</script>
 <script>
+    const ROOM_CODE = JSON.parse(document.getElementById("cineSwipePageConfig").textContent).room_code;
     const ANIM_MS = 280;
     const card = document.querySelector(".image-inner");
     card.addEventListener("click", function (e) {
@@ -67,12 +69,16 @@
             const cardEl = document.getElementById("imageInner");
             const pastMovieJSON = JSON.parse(pastMovie);
             const votePayload = { movie_id: pastMovieJSON.id, vote: button.id };
+            var voteResult = {};
             await Promise.all([
                 fetch("/api/vote", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(votePayload)
-                }).catch(function () {}),
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (d) { voteResult = d || {}; })
+                    .catch(function () {}),
                 new Promise(function (resolve) {
                     const isFlipped = cardEl.classList.contains("is-flipped");
                     const flipY = isFlipped ? "rotateY(180deg)" : "";
@@ -82,6 +88,11 @@
                     setTimeout(resolve, ANIM_MS);
                 })
             ]);
+
+            if (voteResult.has_winner && voteResult.winner_url) {
+                window.location.href = voteResult.winner_url;
+                return;
+            }
 
             cardEl.innerHTML = "";
             cardEl.style.cssText = "";
@@ -184,7 +195,24 @@
         prefetchNextMovie();
     }
 
-    window.onload = getMovie(null);
+    function pollGroupWinner() {
+        if (!ROOM_CODE) return;
+        setInterval(function () {
+            fetch("/api/rooms/" + encodeURIComponent(ROOM_CODE) + "/winner-status")
+                .then(function (r) { return r.json(); })
+                .then(function (d) {
+                    if (d && d.has_winner && d.winner_url) {
+                        window.location.href = d.winner_url;
+                    }
+                })
+                .catch(function () {});
+        }, 1200);
+    }
+
+    window.onload = function () {
+        pollGroupWinner();
+        getMovie(null);
+    };
 </script>
 </body>
 </html>

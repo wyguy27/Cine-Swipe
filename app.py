@@ -135,10 +135,31 @@ def start():
             return redirect(url_for("home"))
         if not room["session_started"]:
             return redirect(url_for("room_lobby", code=code))
-    return render_template("index.html")
+        return render_template("index.html", room_code=code)
+    return render_template("index.html", room_code=None)
 
 
-# when a movie matches with the whole group
+@app.route("/winner")
+def winner():
+    room_code = session.get("room_code")
+    if not room_code:
+        return redirect(url_for("home"))
+    code = room_store.normalize_code(room_code)
+    room = room_store.get_room(code)
+    if room is None or not room.get("session_started", False):
+        return redirect(url_for("home"))
+    wid = room_store.get_winner_movie_id(code)
+    if wid is None:
+        return redirect(url_for("start"))
+    movie = tmdb.fetch_movie_details(wid)
+    return render_template(
+        "winner.html",
+        movie=movie,
+        error=None if movie else "Could not load this movie.",
+    )
+
+
+# when a movie matches with the whole group (legacy); live winner is /winner
 @app.route("/match")
 def match():
     room_code = session.get("room_code")
@@ -150,22 +171,14 @@ def match():
     if room is None or not room.get("session_started", False):
         return redirect(url_for("home"))
 
-    swipes_summary = room_store.get_all_swipes(code) or {}
-    participants = list(swipes_summary.keys())
-    if len(participants) < 2:
-        return render_template("match.html", match=None, error="Need at least 2 participants for matches.")
+    if room_store.get_winner_movie_id(code) is not None:
+        return redirect(url_for("winner"))
 
-    matched_ids = [
-        movie_id
-        for movie_id in swipes_summary[participants[0]].keys()
-        if all(swipes_summary[p].get(movie_id) == "like" for p in participants)
-    ]
-
-    if not matched_ids:
-        return render_template("match.html", match=None, error="No matches found.")
-
-    match = tmdb.fetch_movie_details(matched_ids[0])
-    return render_template("match.html", match=match)
+    return render_template(
+        "match.html",
+        match=None,
+        error="No group winner yet. Keep swiping — you’ll be sent there automatically when everyone likes the same film.",
+    )
 
 
 @app.route("/api/rooms", methods=["POST"])
@@ -236,6 +249,22 @@ def room_lobby(code):
         code=code,
         is_host=is_host,
         invite_url=invite_url,
+    )
+
+
+@app.route("/api/rooms/<code>/winner-status")
+def api_winner_status(code):
+    code = room_store.normalize_code(code)
+    if session.get("room_code") != code:
+        return jsonify({"error": "forbidden"}), 403
+    if room_store.get_room(code) is None:
+        return jsonify({"error": "not_found"}), 404
+    has = room_store.get_winner_movie_id(code) is not None
+    return jsonify(
+        {
+            "has_winner": has,
+            "winner_url": url_for("winner", _external=False) if has else None,
+        }
     )
 
 
@@ -320,6 +349,7 @@ def get_next_movie():
             return jsonify({"error": "No movies available"}), 404
 
         ensure_participant_id()
+        room_store.register_swiping_participant(code, session["participant_id"])
         user_key = f"room_{code}_{session['participant_id']}"
         filters = dict(room.get("discover_filters") or {"include_adult": "false"})
         
@@ -400,6 +430,7 @@ def vote_movie():
         return jsonify({"error": "room_not_found"}), 404
 
     ensure_participant_id()
+    room_store.register_swiping_participant(code, session["participant_id"])
     data = request.get_json(silent=True) or {}
     try:
         movie_id = int(data.get("movie_id"))
@@ -420,17 +451,17 @@ def vote_movie():
 
     room_store.add_swipe(code, session["participant_id"], movie_id, action)
 
-    # Check for match after voting
-    swipes_summary = room_store.get_all_swipes(code) or {}
-    participants = list(swipes_summary.keys())
-    has_match = False
-    if len(participants) >= 2:
-        for movie_id in swipes_summary[participants[0]].keys():
-            if all(swipes_summary[p].get(movie_id) == "like" for p in participants):
-                has_match = True
-                break
+    winner_id = room_store.maybe_set_winner_from_swipes(code)
+    has_winner = winner_id is not None
 
-    return jsonify({"ok": True, "has_match": has_match})
+    return jsonify(
+        {
+            "ok": True,
+            "has_winner": has_winner,
+            "has_match": has_winner,
+            "winner_url": url_for("winner", _external=False) if has_winner else None,
+        }
+    )
 
 
 if __name__ == "__main__":

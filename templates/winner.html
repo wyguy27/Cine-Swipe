@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Winner — Cine-Swipe</title>
+    <style>
+        .winner-hero {
+            text-align: center;
+            max-width: 520px;
+            padding: 1rem 1.25rem 2rem;
+        }
+        .winner-badge {
+            font-size: clamp(2rem, 8vw, 3.25rem);
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            color: #1a1a1a;
+            text-shadow: 2px 2px 0 #fff, -1px -1px 0 #f5e6c8;
+            margin: 0.5rem 0 1rem;
+        }
+        .winner-poster {
+            width: min(280px, 70vw);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+            display: block;
+            margin: 0 auto 1.25rem;
+        }
+        .winner-title {
+            font-size: 1.5rem;
+            margin: 0 0 0.35rem;
+            line-height: 1.2;
+        }
+        .winner-meta {
+            color: #333;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        .winner-overview {
+            text-align: left;
+            background: rgba(255,255,255,0.88);
+            padding: 1rem 1.15rem;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #222;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        }
+        .winner-genres {
+            margin: 0.75rem 0 0;
+            font-size: 0.85rem;
+            color: #444;
+        }
+        .winner-err {
+            color: #b71c1c;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="justify-content: flex-start; padding-top: 0.5rem;">
+        <div class="navbar">
+            <nav>
+                <a href="{{ url_for('home') }}">
+                    <img class="icon" src="{{ url_for('static', filename='icons/home.png') }}" alt="Home"/>
+                </a>
+                <a href="{{ url_for('about') }}">
+                    <img class="icon" src="{{ url_for('static', filename='icons/aboutus.png') }}" alt="About"/>
+                </a>
+            </nav>
+        </div>
+        <div class="winner-hero">
+            <p class="winner-badge">WINNER!!</p>
+            {% if movie %}
+            {% if movie.poster_path %}
+            <img class="winner-poster" src="{{ movie.poster_path }}" alt="Poster for {{ movie.title }}"/>
+            {% endif %}
+            <h1 class="winner-title">{{ movie.title }}</h1>
+            <p class="winner-meta">
+                {% if movie.release_date %}{{ movie.release_date[:4] }}{% else %}Year unknown{% endif %}
+                · Rating {{ (movie.vote_average or 0) | round(1) }}/10
+            </p>
+            {% if movie.genres %}
+            <p class="winner-genres">{{ movie.genres | map(attribute='name') | join(', ') }}</p>
+            {% endif %}
+            <div class="winner-overview">
+                {{ movie.overview or "No overview available." }}
+            </div>
+            {% else %}
+            <p class="winner-err">{{ error or "Something went wrong loading the film." }}</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
