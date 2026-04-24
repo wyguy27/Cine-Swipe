@@ -39,6 +39,12 @@
         card.classList.toggle('is-flipped');
     });
 
+    window.onload = async function () {
+    await clearRoomWinner();
+    pollGroupWinner();
+    getMovie(null);
+    };
+
     /** Loaded once; genre names for tags + back of card. */
     const genresPromise = fetch("/api/genres").then(function (r) { return r.json(); });
 
@@ -60,6 +66,15 @@
             }
         }
         return names;
+    }
+
+    async function clearRoomWinner(){
+        if (!ROOM_CODE) return false;
+        const response = await fetch(
+            "/api/rooms/" + encodeURIComponent(ROOM_CODE) + "/clear-winner",
+            {method: "POST"}
+        );
+        return response.ok
     }
 
     async function getMovie(button) {
@@ -208,11 +223,6 @@
                 .catch(function () {});
         }, 1200);
     }
-
-    window.onload = function () {
-        pollGroupWinner();
-        getMovie(null);
-    };
 </script>
 </body>
 </html>

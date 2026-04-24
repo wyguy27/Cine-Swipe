@@ -76,6 +76,7 @@
             </div>
             {% else %}
             <h1>You’re in the lobby</h1>
+            <p>Players in room: <strong>{{ participant_count }}</strong>{% if max_participants %} / {{ max_participants }}{% endif %}</p>
             <p>Share the code or link so friends can join.</p>
             <p>Share code:</p>
             <div class="code-display" id="roomCode">{{ code }}</div>
