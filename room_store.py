@@ -8,6 +8,8 @@ import time
 CODE_ALPHABET = string.ascii_uppercase.replace("O", "").replace("I", "") + "23456789"
 CODE_LENGTH = 6
 
+MAX_PARTICIPANTS_DEFAULT = 2
+
 rooms: dict[str, dict] = {}
 
 
@@ -28,6 +30,8 @@ def create_room(host_token: str, discover_filters: dict[str, str] | None = None)
                 "movie_queue": [],
                 "discover_page": 1,
                 "swiping_participants": set(),
+                "participants": set(),
+                "max_participants": MAX_PARTICIPANTS_DEFAULT,
                 "winner_movie_id": None,
                 "swipes": {},
             }
@@ -43,6 +47,38 @@ def get_room(code: str) -> dict | None:
 
 def normalize_code(code: str) -> str:
     return (code or "").strip().upper()
+
+def can_join_room(code: str) -> bool:
+    code = normalize_code(code)
+    room = rooms.get(code)
+    if not room:
+        return False
+    return len(room.get("participants", set())) < room.get("max_participants", 0)
+
+def add_participant(code: str, participant_id: str) -> bool:
+    code = normalize_code(code)
+    room = rooms.get(code)
+    if not room or not participant_id:
+        return False
+    
+    participants = room.setdefault("participants", set())
+    max_participants = room.get("max_participants", 0)
+    if len(participants) >= max_participants:
+        return False
+    
+    participants.add(participant_id)
+    return True
+
+def remove_participant(code: str, participant_id: str) -> None:
+    code = normalize_code(code)
+    room = rooms.get(code)
+    if room and participant_id:
+        room.setdefault("participants", set()).discard(participant_id)
+
+def get_participant_count(code: str) -> int:
+    code = normalize_code(code)
+    room = rooms.get(code)
+    return len(room.get("participants", set())) if room else 0
 
 
 def mark_session_started(code: str) -> bool:

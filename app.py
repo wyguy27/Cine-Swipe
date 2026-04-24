@@ -190,6 +190,7 @@ def api_create_room():
     session["role"] = "host"
     session["host_token"] = host_token
     ensure_participant_id()
+    room_store.add_participant(code, session["participant_id"])
     return jsonify(
         {
             "code": code,
@@ -212,10 +213,14 @@ def join_room_submit():
     code = room_store.normalize_code(request.form.get("code", ""))
     if not code or room_store.get_room(code) is None:
         return redirect(url_for("join_page", error="invalid"))
+    
+    ensure_participant_id()
+    if not room_store.add_participant(code, session["participant_id"]):
+        return redirect(url_for("join_page", code=code, error="full"))
+
     session["room_code"] = code
     session["role"] = "guest"
     session.pop("host_token", None)
-    ensure_participant_id()
     return redirect(url_for("room_lobby", code=code))
 
 
@@ -224,10 +229,14 @@ def join_with_link(code):
     code = room_store.normalize_code(code)
     if room_store.get_room(code) is None:
         return redirect(url_for("join_page", error="invalid"))
+    
+    ensure_participant_id()
+    if not room_store.add_participant(code, session["participant_id"]):
+        return redirect(url_for("join_page", code=code, error="full"))
+
     session["room_code"] = code
     session["role"] = "guest"
     session.pop("host_token", None)
-    ensure_participant_id()
     return redirect(url_for("room_lobby", code=code))
 
 
@@ -315,6 +324,11 @@ def api_room_swipes(code):
 
 @app.route("/room/leave", methods=["POST"])
 def leave_room():
+    room_code = session.get("room_code")
+    participant_id = session.get("participant_id")
+    if room_code and participant_id:
+        room_store.remove_participant(room_code, participant_id)
+
     session.pop("room_code", None)
     session.pop("role", None)
     session.pop("host_token", None)
