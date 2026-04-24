@@ -59,6 +59,32 @@ def fetch_movie_list(filters=None):
         return []
 
 
+def fetch_movie_details(movie_id: int) -> dict | None:
+    """TMDB movie details for a single id. Returns None on failure."""
+    try:
+        mid = int(movie_id)
+    except (TypeError, ValueError):
+        return None
+    url = f"https://api.themoviedb.org/3/movie/{mid}"
+    headers = {
+        "accept": "application/json",
+        "Authorization": "Bearer " + api_key,
+    }
+    params = {"language": "en-US"}
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=15)
+        response.raise_for_status()
+        data = response.json()
+        if data.get("poster_path"):
+            data["poster_path"] = (
+                f"https://image.tmdb.org/t/p/w500{data['poster_path']}"
+            )
+        return data
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+
 def fetch_genres():
     url = "https://api.themoviedb.org/3/genre/movie/list"
     headers = {

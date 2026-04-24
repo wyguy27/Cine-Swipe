@@ -13,6 +13,8 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             max-width: 420px;
             text-align: center;
+            overflow: scroll;
+            margin: 50px;
         }
         .lobby-card h1 { margin-top: 0; font-size: 1.5rem; }
         .role-host { color: #1565c0; font-weight: 600; }
@@ -44,10 +46,26 @@
         .btn-primary { background: #333; color: #fff; }
         .btn-secondary { background: #e0e0e0; color: #222; }
         .waiting-msg { color: #444; margin: 0.5rem 0 0; }
+        .host-qr-block {
+            margin: 1.25rem 0 0;
+            padding: 1rem;
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+        }
+        .host-qr-block > p { margin: 0 0 0.5rem; font-size: 0.95rem; font-weight: 600; color: #333; }
+        .host-qr-placeholder img,
+        .host-qr-placeholder canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        .host-qr-caption { margin: 0.65rem 0 0; font-size: 0.8rem; color: #666; }
     </style>
 </head>
 <body>
     <div class="container" style="justify-content: center;">
+        
         <div class="lobby-card" {% if error != 'not_found' %}id="lobbyCard" data-is-host="{{ 1 if is_host else 0 }}"{% endif %}>
             {% if error == 'not_found' %}
             <h1>Room not found</h1>
@@ -58,11 +76,17 @@
             </div>
             {% else %}
             <h1>You’re in the lobby</h1>
+            <p>Players in room: <strong>{{ participant_count }}</strong>{% if max_participants %} / {{ max_participants }}{% endif %}</p>
             <p>Share the code or link so friends can join.</p>
             <p>Share code:</p>
             <div class="code-display" id="roomCode">{{ code }}</div>
             {% if is_host %}
             <p class="role-host">You are the host</p>
+            <div class="host-qr-block" aria-label="QR code to join this room">
+                <p>Scan to join</p>
+                <div id="hostQrEl" class="host-qr-placeholder" role="img" aria-label="QR code for invite link"></div>
+                <p class="host-qr-caption">Opens the join link on their phone.</p>
+            </div>
             {% else %}
             <p class="role-guest">You are a guest</p>
             {% endif %}
@@ -87,9 +111,47 @@
     {% if error != 'not_found' %}
     <script>
         const swipingStatusUrl = "{{ url_for('api_room_swiping_status', code=code) }}";
+        const winnerStatusUrl = "{{ url_for('api_winner_status', code=code) }}";
         const startSwipingApiUrl = "{{ url_for('api_start_swiping', code=code) }}";
         const startPlayUrl = "{{ url_for('start') }}";
         const isHost = document.getElementById("lobbyCard").dataset.isHost === "1";
+
+        if (isHost) {
+            const inviteText = document.getElementById("inviteUrl").textContent.trim();
+            const hostQrEl = document.getElementById("hostQrEl");
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+            script.onload = function () {
+                if (typeof QRCode === "undefined" || !hostQrEl) return;
+                try {
+                    new QRCode(hostQrEl, {
+                        text: inviteText,
+                        width: 220,
+                        height: 220,
+                        colorDark: "#111111",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (e) {
+                    hostQrEl.innerHTML = "";
+                    const p = document.createElement("p");
+                    p.className = "host-qr-caption";
+                    p.style.color = "#c62828";
+                    p.textContent = "Could not generate QR code. Use the link below instead.";
+                    hostQrEl.appendChild(p);
+                }
+            };
+            script.onerror = function () {
+                if (!hostQrEl) return;
+                hostQrEl.innerHTML = "";
+                const p = document.createElement("p");
+                p.className = "host-qr-caption";
+                p.style.color = "#c62828";
+                p.textContent = "QR unavailable offline. Use the invite link below.";
+                hostQrEl.appendChild(p);
+            };
+            document.head.appendChild(script);
+        }
 
         document.getElementById("copyInvite").addEventListener("click", async function () {
             const text = document.getElementById("inviteUrl").textContent.trim();
@@ -115,12 +177,32 @@
         if (!isHost) {
             const poll = setInterval(async () => {
                 try {
+                    const wr = await fetch(winnerStatusUrl);
+                    if (wr.ok) {
+                        const wd = await wr.json();
+                        if (wd.has_winner && wd.winner_url) {
+                            clearInterval(poll);
+                            window.location.href = wd.winner_url;
+                            return;
+                        }
+                    }
                     const r = await fetch(swipingStatusUrl);
                     if (!r.ok) return;
                     const data = await r.json();
                     if (data.session_started) {
                         clearInterval(poll);
                         window.location.href = startPlayUrl;
+                    }
+                } catch (e) { /* ignore */ }
+            }, 1200);
+        } else {
+            setInterval(async () => {
+                try {
+                    const wr = await fetch(winnerStatusUrl);
+                    if (!wr.ok) return;
+                    const wd = await wr.json();
+                    if (wd.has_winner && wd.winner_url) {
+                        window.location.href = wd.winner_url;
                     }
                 } catch (e) { /* ignore */ }
             }, 1200);

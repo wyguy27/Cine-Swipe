@@ -44,11 +44,13 @@
 </head>
 <body>
     <div class="container" style="justify-content: center;">
-        <div class="join-card">
+        <div class="join-card"  style="margin-top : 25vh">
             <h1>Join a session</h1>
             <p>Enter the room code from your host.</p>
             {% if error == 'invalid' %}
             <p class="err">That code isn’t valid. Check with the host and try again.</p>
+            {% elif error == 'full' %}
+            <p class="err">This room is full. Ask the host to create a new room or try again later.</p>
             {% endif %}
             <form method="post" action="{{ url_for('join_room_submit') }}">
                 <input type="text" name="code" id="code" maxlength="12" autocomplete="off"
