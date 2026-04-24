@@ -8,7 +8,7 @@ import time
 CODE_ALPHABET = string.ascii_uppercase.replace("O", "").replace("I", "") + "23456789"
 CODE_LENGTH = 6
 
-MAX_PARTICIPANTS_DEFAULT = 2
+MAX_PARTICIPANTS_DEFAULT = 6
 
 rooms: dict[str, dict] = {}
 
