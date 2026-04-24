@@ -71,7 +71,6 @@ def invite_link_abs(code: str) -> str:
             return f"{request.scheme}://{lan}{port_suffix}{path}"
     return url_for("join_with_link", code=code, _external=True)
 
-
 def parse_host_discover_payload() -> dict[str, str]:
     """Body for POST /api/rooms: host's TMDB discover constraints for the session."""
     data = request.get_json(silent=True) or {}
@@ -158,10 +157,21 @@ def winner():
         error=None if movie else "Could not load this movie.",
     )
 
+@app.route("/api/rooms/<code>/clear-winner", methods=["POST"])
+def api_clear_winner(code):
+    code = room_store.normalize_code(code)
+    if session.get("room_code") != code:
+        return jsonify({"error": "forbidden"}), 403
+    if room_store.get_room(code) is None:
+        return jsonify({"error": "not_found"}), 404
+    room_store.clear_winner(code)
+    return jsonify({"ok": True})
+
 
 # when a movie matches with the whole group (legacy); live winner is /winner
 @app.route("/match")
 def match():
+    
     room_code = session.get("room_code")
     if not room_code:
         return redirect(url_for("home"))
@@ -253,11 +263,15 @@ def room_lobby(code):
     host_token = session.get("host_token")
     is_host = role == "host" and host_token == room["host_token"]
     invite_url = invite_link_abs(code)
+    participant_count = room_store.get_participant_count(code)
+    max_participants = room.get("max_participants")
     return render_template(
         "room.html",
         code=code,
         is_host=is_host,
         invite_url=invite_url,
+        participant_count = participant_count,
+        max_participants = max_participants
     )
 
 

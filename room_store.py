@@ -8,7 +8,7 @@ import time
 CODE_ALPHABET = string.ascii_uppercase.replace("O", "").replace("I", "") + "23456789"
 CODE_LENGTH = 6
 
-MAX_PARTICIPANTS_DEFAULT = 2
+MAX_PARTICIPANTS_DEFAULT = 6
 
 rooms: dict[str, dict] = {}
 
@@ -151,3 +151,15 @@ def get_winner_movie_id(code: str) -> int | None:
         return None
     wid = room.get("winner_movie_id")
     return int(wid) if wid is not None else None
+
+
+def clear_winner(code: str) -> None:
+    code = normalize_code(code)
+    room = rooms.get(code)
+    if room:
+        winner_id = room.get("winner_movie_id")
+        if winner_id is not None:
+            swipes = room.get("swipes", {})
+            for participant_swipes in swipes.values():
+                participant_swipes.pop(int(winner_id), None)
+        room["winner_movie_id"] = None
