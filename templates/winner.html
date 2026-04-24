@@ -6,13 +6,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Winner — Cine-Swipe</title>
     <style>
-        body{
-            overflow : hidden;
-        }
         .winner-hero {
             text-align: center;
             max-width: 520px;
             padding: 1rem 1.25rem 2rem;
+            display:flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow-x: hidden;
         }
         .winner-badge {
             font-size: clamp(2rem, 8vw, 3.25rem);
@@ -50,7 +52,7 @@
             box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         }
         .winner-genres {
-            margin: 0.75rem 0 0;
+            /* margin-bottom: 0.75rem 0 0; */
             font-size: 0.85rem;
             color: #444;
         }
@@ -61,7 +63,7 @@
     </style>
 </head>
 <body>
-    <div class="container" style="justify-content: flex-start; padding-top: 0.5rem; margin-top:10vh;">
+    <div class="container" style="justify-content: flex-start; padding-top: 0.5rem;">
         <div class="navbar">
             <nav>
                 <a href="{{ url_for('home') }}">
@@ -72,7 +74,7 @@
                 </a>
             </nav>
         </div>
-        <div class="winner-hero" sytle="overflow: scroll">
+        <div class="winner-hero">
             <p class="winner-badge">WINNER!!</p>
             {% if movie %}
             {% if movie.poster_path %}
@@ -86,9 +88,21 @@
             {% if movie.genres %}
             <p class="winner-genres">{{ movie.genres | map(attribute='name') | join(', ') }}</p>
             {% endif %}
-            <div class="winner-overview">
+            <div class="winner-overview" style="margin-top: 20px;">
                 {{ movie.overview or "No overview available." }}
             </div>
+            <a style="
+                display: block;
+                width: 100%;
+                padding: 0.65rem 1rem;
+                margin: 2rem;
+                font: inherit;
+                border-radius: 8px;
+                background: #e8e4dc;
+                color: #222;
+                text-decoration: none;
+                text-align: center; 
+                box-sizing: border-box;" href="{{url_for('start')}}">Start Swiping Again</a>
             {% else %}
             <p class="winner-err">{{ error or "Something went wrong loading the film." }}</p>
             {% endif %}

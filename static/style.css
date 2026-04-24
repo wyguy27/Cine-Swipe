@@ -1,7 +1,7 @@
 html, body{
     padding: 0;
     margin: 0;
-    overflow: scroll;
+    background-color:#d9bc7a;
 }
 
 .image {
@@ -18,8 +18,8 @@ html, body{
     background-color:#d9bc7a;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    width: 100vw;
+    height: auto;
+    width: 100%;
     align-items: center;
     justify-content: space-evenly;
 }
@@ -216,14 +216,13 @@ button {
 }
 
 .navbar {
-    position: fixed;
-    top: 0;
+    top: auto;
     display:flex;
     flex-direction: row;
     justify-content: space-between;
     background-color: #772121;
     height: 10vh;
-    width: 100vw;
+    width: 100%;
 
 }
 
