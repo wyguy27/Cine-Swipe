@@ -6,6 +6,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <title>Winner — Cine-Swipe</title>
     <style>
+        body{
+            overflow : hidden;
+        }
         .winner-hero {
             text-align: center;
             max-width: 520px;
@@ -58,7 +61,7 @@
     </style>
 </head>
 <body>
-    <div class="container" style="justify-content: flex-start; padding-top: 0.5rem;">
+    <div class="container" style="justify-content: flex-start; padding-top: 0.5rem; margin-top:10vh;">
         <div class="navbar">
             <nav>
                 <a href="{{ url_for('home') }}">
@@ -69,7 +72,7 @@
                 </a>
             </nav>
         </div>
-        <div class="winner-hero">
+        <div class="winner-hero" sytle="overflow: scroll">
             <p class="winner-badge">WINNER!!</p>
             {% if movie %}
             {% if movie.poster_path %}
